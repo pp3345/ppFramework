@@ -1,0 +1,7 @@
+{% extends "@ppFramework/Exception.twig" %}
+
+{% block title %}{{ exception.getCode() }}{% endblock %}
+{% block content %}
+    <h1>{{ exception.getCode() }}</h1>
+    <span>This was not supposed to happen, we're sorry.</span>
+{% endblock %}

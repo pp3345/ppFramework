@@ -1,0 +1,11 @@
+{% extends "@ppFramework/Exception.twig" %}
+
+{% block title %}{% endblock %}
+{% block content %}
+    <span>An internal error has occurred, please try again later.</span>
+    {% if displayStack %}
+        <br/><br/>
+        <b>Error message:</b>
+        <span>{{ exception.getMessage() }} in {{ exception.getFile()  }} on line {{ exception.getLine() }}</span>
+    {% endif %}
+{% endblock %}
