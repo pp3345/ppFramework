@@ -93,6 +93,11 @@
 				    $this->routes[$method][$uri](...array_map('urldecode', explode('/', substr($originalURI, strlen($uri) + 1))));
 				    return;
 			    }
+
+			    if(isset($this->routes['*'][$uri])) {
+				    $this->routes['*'][$uri](...array_map('urldecode', explode('/', substr($originalURI, strlen($uri) + 1))));
+				    return;
+			    }
 		    } while($uri = substr($uri, 0, strrpos($uri, '/')));
 
 		    throw new NotFoundException();
@@ -114,7 +119,7 @@
 		    }
 	    }
 
-	    public function addRoute($methods, $path, callable $callback) {
+	    public function addRoute($path, callable $callback, $methods = ['*']) {
 		    foreach((array) $methods as $method) {
 			    $this->routes[$method][$path] = $callback;
 		    }
