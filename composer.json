@@ -1,7 +1,7 @@
 {
 	"name": "pp3345/ppframework",
 	"description": "ppFramework",
-	"minimum-stability": "dev",
+	"minimum-stability": "stable",
 	"license": "GNU GPL v3",
 	"authors": [
 		{
@@ -10,7 +10,7 @@
 		}
 	],
 	"require": {
-		"twig/twig": "1.16.0",
+		"twig/twig": ">=1.16.0",
 		"php": ">=5.6.0"
 	},
 	"config": {
