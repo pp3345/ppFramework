@@ -390,10 +390,8 @@
 	    public function execute() {
 		    $stmt = $this->run();
 
-		    if($this->model) {
+		    if($model = $this->model) {
 			    $retval = [];
-
-			    $model = $this->model;
 
 			    while($result = $stmt->fetchObject()) {
 				    if(!isset($result->id))
@@ -411,9 +409,7 @@
 	    public function generate() {
 		    $stmt = $this->run();
 
-		    if($this->model) {
-			    $model = $this->model;
-
+		    if($model = $this->model) {
 			    while($result = $stmt->fetchObject()) {
 				    if(!isset($result->id))
 					    throw new \LogicException("Model queries must include id field");
@@ -425,5 +421,18 @@
 				    yield $result;
 			    }
 		    }
+	    }
+
+	    public function unique() {
+		    $stmt = $this->run();
+
+		    if($model = $this->model) {
+			    $result = $stmt->fetchObject();
+
+			    if(!isset($result->id))
+				    throw new \LogicException("Model queries must include id field");
+
+			    return $model::get($result->id, $result);
+		    } else return $stmt->fetch();
 	    }
     }
