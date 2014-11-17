@@ -17,42 +17,40 @@
 	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-    namespace net\pp3345\ppFramework;
+	namespace net\pp3345\ppFramework;
 
-    use Twig_Environment;
+	use Twig_Environment;
 
-    class View {
-	    /**
-	     * @var Twig_Environment
-	     */
-	    private static $environment;
-	    private $vars = [];
-	    private $context = [];
+	class View {
+		/**
+		 * @var Twig_Environment
+		 */
+		private static $environment;
+		private $vars = [];
+		private $context = [];
 
-	    public function __construct() {
-		    if(!self::$environment) {
-			    self::$environment = new Twig_Environment(new \Twig_Loader_Filesystem());
-			    self::$environment->getLoader()->addPath(__DIR__ . "/View", "ppFramework");
-		    }
-	    }
+		public static function getEnvironment() {
+			if(!self::$environment) {
+				self::$environment = new Twig_Environment(new \Twig_Loader_Filesystem());
+				self::$environment->getLoader()->addPath(__DIR__ . "/View", "ppFramework");
+			}
 
-	    public function getEnvironment() {
-		    return self::$environment;
-	    }
+			return self::$environment;
+		}
 
-	    public function render($template) {
-		    return self::$environment->render($template, $this->context);
-	    }
+		public function render($template) {
+			return self::getEnvironment()->render($template, $this->context);
+		}
 
-	    public function setVariable($name, $value) {
-		    $this->context[$name] = $value;
-	    }
+		public function setVariable($name, $value) {
+			$this->context[$name] = $value;
+		}
 
-	    public function getVariables() {
-		    return $this->context;
-	    }
+		public function getVariables() {
+			return $this->context;
+		}
 
-	    public function setVariables(array $variables) {
-		    $this->context = array_merge($this->context, $variables);
-	    }
-    }
+		public function setVariables(array $variables) {
+			$this->context = array_merge($this->context, $variables);
+		}
+	}
