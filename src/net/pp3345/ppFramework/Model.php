@@ -60,6 +60,14 @@
 		    return $retval;
 	    }
 
+	    public function __sleep() {
+		    return ["id"];
+	    }
+
+	    public function __wakeup() {
+		    self::__construct($this->id);
+	    }
+
 	    /**
 	     * @param $key
 	     *
