@@ -17,11 +17,11 @@
 	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-    namespace net\pp3345\ppFramework\Exception;
+	namespace net\pp3345\ppFramework\Exception;
 
-    abstract class HTTPException extends \Exception {
+	abstract class HTTPException extends \Exception {
 		public function __construct($message = "", \Exception $previous = null) {
-			$this->message = $message;
+			$this->message  = $message;
 			$this->previous = $previous;
 		}
-    }
+	}

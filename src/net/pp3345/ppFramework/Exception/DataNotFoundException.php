@@ -17,10 +17,10 @@
 	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-    namespace net\pp3345\ppFramework\Exception;
+	namespace net\pp3345\ppFramework\Exception;
 
-    class DataNotFoundException extends NotFoundException {
+	class DataNotFoundException extends NotFoundException {
 		public function __construct($class, $id) {
 			$this->message = "Unable to find entity '{$id}' of class {$class}";
 		}
-    }
+	}

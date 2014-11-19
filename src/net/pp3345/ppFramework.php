@@ -17,26 +17,26 @@
 	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-    namespace net\pp3345;
+	namespace net\pp3345;
 
-    use Exception;
-    use net\pp3345\ppFramework\Exception\HTTPException;
-    use net\pp3345\ppFramework\Exception\NotFoundException;
-    use net\pp3345\ppFramework\Singleton;
-    use net\pp3345\ppFramework\View;
+	use Exception;
+	use net\pp3345\ppFramework\Exception\HTTPException;
+	use net\pp3345\ppFramework\Exception\NotFoundException;
+	use net\pp3345\ppFramework\Singleton;
+	use net\pp3345\ppFramework\View;
 
-    class ppFramework {
+	class ppFramework {
 		use Singleton;
 
-	    public    $application = __NAMESPACE__;
-	    protected $routes = [];
+		public $application = __NAMESPACE__;
+		protected $routes = [];
 
-	    private function __construct() {
-		    set_error_handler(function($severity, $string, $file, $line) {
-			    if(error_reporting() & $severity)
-				    throw new \ErrorException($string, 0, $severity, $file, $line);
-		    });
-	    }
+		private function __construct() {
+			set_error_handler(function ($severity, $string, $file, $line) {
+				if(error_reporting() & $severity)
+					throw new \ErrorException($string, 0, $severity, $file, $line);
+			});
+		}
 
 		public function onRequest() {
 			session_start();
@@ -51,78 +51,82 @@
 			}
 		}
 
-	    public function route($method, $originalURI) {
-		    $uri = explode('/', urldecode($originalURI));
+		public function route($method, $originalURI) {
+			$uri = explode('/', urldecode($originalURI));
 
-		    if(!isset($uri[1]) || !$uri[1]) {
-			    $this->routeDefault($uri);
+			if(!isset($uri[1]) || !$uri[1]) {
+				$this->routeDefault($uri);
 
-			    return;
-		    }
+				return;
+			}
 
-		    $classPath = $this->application . "\\Controller\\" . ucfirst($uri[1]);
+			$classPath = $this->application . "\\Controller\\" . ucfirst($uri[1]);
 
-		    if(class_exists($classPath) && is_callable($classPath . "::getInstance")) {
-			    $controller = $classPath::getInstance();
+			if(class_exists($classPath) && is_callable($classPath . "::getInstance")) {
+				$controller = $classPath::getInstance();
 
-			    do {
-				    if(!isset($uri[2]) || (count($uri) == 3 && !$uri[2])) {
-					    if(!is_callable([$controller, $uri[1]])) {
-						    throw new NotFoundException();
-					    }
+				do {
+					if(!isset($uri[2]) || (count($uri) == 3 && !$uri[2])) {
+						if(!is_callable([$controller, $uri[1]])) {
+							throw new NotFoundException();
+						}
 
-					    $controller->$uri[1]();
-					    return;
-				    }
+						$controller->$uri[1]();
 
-				    for($i = count($uri) - 2; $i; $i--) {
-					    $function = implode(array_slice($uri, 2, $i));
+						return;
+					}
 
-					    if(is_callable([$controller, $function])) {
-						    $controller->$function(...array_map('urldecode', array_slice($uri, $i + 2, count($uri) - $i)));
-						    return;
-					    }
-				    }
-			    } while(false);
-		    }
+					for($i = count($uri) - 2; $i; $i--) {
+						$function = implode(array_slice($uri, 2, $i));
 
-		    $uri = $originalURI;
+						if(is_callable([$controller, $function])) {
+							$controller->$function(...array_map('urldecode', array_slice($uri, $i + 2, count($uri) - $i)));
 
-		    do {
-			    if(isset($this->routes[$method][$uri])) {
-				    $this->routes[$method][$uri](...array_map('urldecode', explode('/', substr($originalURI, strlen($uri) + 1))));
-				    return;
-			    }
+							return;
+						}
+					}
+				} while(false);
+			}
 
-			    if(isset($this->routes['*'][$uri])) {
-				    $this->routes['*'][$uri](...array_map('urldecode', explode('/', substr($originalURI, strlen($uri) + 1))));
-				    return;
-			    }
-		    } while($uri = substr($uri, 0, strrpos($uri, '/')));
+			$uri = $originalURI;
 
-		    throw new NotFoundException();
-	    }
+			do {
+				if(isset($this->routes[$method][$uri])) {
+					$this->routes[$method][$uri](...array_map('urldecode', explode('/', substr($originalURI, strlen($uri) + 1))));
 
-	    public function routeDefault() {
-		    throw new NotFoundException();
+					return;
+				}
+
+				if(isset($this->routes['*'][$uri])) {
+					$this->routes['*'][$uri](...array_map('urldecode', explode('/', substr($originalURI, strlen($uri) + 1))));
+
+					return;
+				}
+			} while($uri = substr($uri, 0, strrpos($uri, '/')));
+
+			throw new NotFoundException();
 		}
 
-	    protected function exception(Exception $exception) {
-		    $view = new View();
-		    $view->setVariable('displayStack', ini_get('display_errors'));
-		    $view->setVariable('exception', $exception);
+		public function routeDefault() {
+			throw new NotFoundException();
+		}
 
-		    if($exception instanceof HTTPException) {
-			    echo $view->render("@ppFramework/Exception/HTTP.twig");
-		    } else {
-			    echo $view->render("@ppFramework/Exception/Error.twig");
-		    }
-	    }
+		protected function exception(Exception $exception) {
+			$view = new View();
+			$view->setVariable('displayStack', ini_get('display_errors'));
+			$view->setVariable('exception', $exception);
 
-	    public function addRoute($path, callable $callback, $methods = ['*']) {
-		    foreach((array) $methods as $method) {
-			    $this->routes[$method][$path] = $callback;
-		    }
-	    }
-    }
+			if($exception instanceof HTTPException) {
+				echo $view->render("@ppFramework/Exception/HTTP.twig");
+			} else {
+				echo $view->render("@ppFramework/Exception/Error.twig");
+			}
+		}
+
+		public function addRoute($path, callable $callback, $methods = ['*']) {
+			foreach((array) $methods as $method) {
+				$this->routes[$method][$path] = $callback;
+			}
+		}
+	}
 

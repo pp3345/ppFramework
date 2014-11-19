@@ -17,17 +17,18 @@
 	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-    namespace net\pp3345\ppFramework;
+	namespace net\pp3345\ppFramework;
 
-    trait Singleton {
-	    private static $_instance;
+	trait Singleton {
+		private static $_instance;
 
-	    private function __construct() {}
+		private function __construct() {
+		}
 
-	    /**
-	     * @return $this
-	     */
-	    public static function getInstance() {
-		    return self::$_instance ?: (self::$_instance = new self);
-	    }
-    }
+		/**
+		 * @return $this
+		 */
+		public static function getInstance() {
+			return self::$_instance ?: (self::$_instance = new self);
+		}
+	}

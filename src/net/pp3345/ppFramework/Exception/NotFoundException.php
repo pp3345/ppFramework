@@ -17,8 +17,8 @@
 	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-    namespace net\pp3345\ppFramework\Exception;
+	namespace net\pp3345\ppFramework\Exception;
 
-    class NotFoundException extends HTTPException {
-	    protected $code = 404;
-    }
+	class NotFoundException extends HTTPException {
+		protected $code = 404;
+	}

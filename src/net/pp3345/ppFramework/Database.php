@@ -17,29 +17,30 @@
 	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-    namespace net\pp3345\ppFramework;
+	namespace net\pp3345\ppFramework;
 
-    use PDO;
+	use PDO;
 
-    class Database extends PDO {
+	class Database extends PDO {
 		private static $default;
 
-	    public function __construct() {
-		    parent::__construct(...func_get_args());
+		public function __construct() {
+			parent::__construct(...func_get_args());
 
-		    $this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-	    }
+			$this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+		}
 
-	    /**
-	     * @return self
-	     */
-	    public static function getDefault() {
-		    if(!self::$default)
-			    throw new \LogicException("Default database not set");
-		    return self::$default;
-	    }
+		/**
+		 * @return self
+		 */
+		public static function getDefault() {
+			if(!self::$default)
+				throw new \LogicException("Default database not set");
 
-	    public function setDefault() {
-		    self::$default = $this;
-	    }
-    }
+			return self::$default;
+		}
+
+		public function setDefault() {
+			self::$default = $this;
+		}
+	}
