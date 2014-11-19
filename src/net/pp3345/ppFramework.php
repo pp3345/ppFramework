@@ -60,7 +60,7 @@
 			    return;
 		    }
 
-		    $classPath = $this->application . "\\Controller\\" . $uri[1];
+		    $classPath = $this->application . "\\Controller\\" . ucfirst($uri[1]);
 
 		    if(class_exists($classPath) && is_callable($classPath . "::getInstance")) {
 			    $controller = $classPath::getInstance();
