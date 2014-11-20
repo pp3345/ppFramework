@@ -280,7 +280,7 @@
 		private function condition($field, $value) {
 			switch(count($value)) {
 				case 0:
-					return "`{$field}` = ?";
+					return "`{$field}` = ? ";
 				case 1:
 					if($value[0] === null)
 						return "`{$field}` IS NULL ";
