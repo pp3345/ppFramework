@@ -23,6 +23,17 @@
     <br/><br/>
     <h3>Stack trace:</h3>
     <pre>{{ exception.getTraceAsString() }}</pre>
+    {% macro previous(exception) %}
+        {% if exception.previous %}
+            <br/>
+            <h4>Previous exception:</h4>
+            {{ exception.previous.getMessage() }} in {{ exception.previous.getFile() }} on line {{ exception.previous.getLine() }}
+            <br/><br/>
+            <pre>{{ exception.previous.getTraceAsString() }}</pre>
+            {{ _self.previous(exception.previous) }}
+        {% endif %}
+    {% endmacro %}
+    {{ _self.previous(exception) }}
 {% endif %}
 </body>
 </html>
