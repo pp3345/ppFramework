@@ -41,6 +41,6 @@
 		}
 
 		public function setDefault() {
-			self::$default = $this;
+			return self::$default = $this;
 		}
 	}
