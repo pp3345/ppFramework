@@ -272,17 +272,23 @@
 		}
 
 		private function condition($field, $value) {
-			if(count($value) == 1) {
-				if($value === null)
-					return "`{$field}` IS NULL";
+			switch(count($value)) {
+				case 0:
+					return "`{$field}` = ?";
+				case 1:
+					if($value[0] === null)
+						return "`{$field}` IS NULL ";
 
-				$this->parameters[] = $value[0];
+					$this->parameters[] = $value[0];
 
-				return "`{$field}` = ? ";
-			} else {
-				$this->parameters[] = $value[1];
+					return "`{$field}` = ? ";
+				default:
+					if($value[1] === null)
+						return "`{$field}` {$value[0]} NULL ";
 
-				return "`{$field}` {$value[0]} ? ";
+					$this->parameters[] = $value[1];
+
+					return "`{$field}` {$value[0]} ? ";
 			}
 		}
 
