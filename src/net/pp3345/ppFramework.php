@@ -31,7 +31,7 @@
 		public $application = __NAMESPACE__;
 		protected $routes = [];
 
-		private function __construct() {
+		protected function __construct() {
 			set_error_handler(function ($severity, $string, $file, $line) {
 				if(error_reporting() & $severity)
 					throw new \ErrorException($string, 0, $severity, $file, $line);
