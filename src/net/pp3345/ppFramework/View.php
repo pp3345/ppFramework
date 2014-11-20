@@ -44,6 +44,7 @@
 
 		public function setVariable($name, $value) {
 			$this->context[$name] = $value;
+			return $this;
 		}
 
 		public function getVariables() {
@@ -52,5 +53,6 @@
 
 		public function setVariables(array $variables) {
 			$this->context = array_merge($this->context, $variables);
+			return $this;
 		}
 	}
