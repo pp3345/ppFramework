@@ -22,6 +22,7 @@
 
 	use net\pp3345\ppFramework\Database;
 	use net\pp3345\ppFramework\Model;
+	use PDOStatement;
 
 	class Select {
 		/**
@@ -55,6 +56,11 @@
 		private $previous = null;
 
 		private $lastClause = 0;
+
+		/**
+		 * @var PDOStatement
+		 */
+		private $stmt = null;
 
 		const CLAUSE_JOIN = 0b1;
 		const CLAUSE_WHERE = 0b10;
@@ -385,7 +391,7 @@
 		}
 
 		public function prepare() {
-			return $this->database->prepare($this->build());
+			return $this->stmt ?: $this->database->prepare($this->build());
 		}
 
 		public function run() {
