@@ -410,8 +410,8 @@
 			return $stmt;
 		}
 
-		public function execute() {
-			$stmt = $this->run();
+		public function execute($parameters = []) {
+			$stmt = $this->run($parameters);
 
 			if($model = $this->model) {
 				$retval = [];
@@ -429,8 +429,8 @@
 			}
 		}
 
-		public function generate() {
-			$stmt = $this->run();
+		public function generate($parameters = []) {
+			$stmt = $this->run($parameters);
 
 			if($model = $this->model) {
 				while($result = $stmt->fetchObject()) {
@@ -446,8 +446,8 @@
 			}
 		}
 
-		public function unique() {
-			$stmt = $this->run();
+		public function unique($parameters = []) {
+			$stmt = $this->run($parameters);
 
 			if($model = $this->model) {
 				$result = $stmt->fetchObject();
