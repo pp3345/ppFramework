@@ -285,14 +285,14 @@
 					if($value[0] === null)
 						return "`{$field}` IS NULL ";
 
-					$this->parameters[] = $value[0];
+					$this->parameters[] = is_object($value[0]) && isset($value[0]->id) ? $value[0]->id : $value[0];
 
 					return "`{$field}` = ? ";
 				default:
 					if($value[1] === null)
 						return "`{$field}` {$value[0]} NULL ";
 
-					$this->parameters[] = $value[1];
+					$this->parameters[] = is_object($value[1]) && isset($value[1]->id) ? $value[1]->id : $value[1];
 
 					return "`{$field}` {$value[0]} ? ";
 			}
@@ -394,9 +394,18 @@
 			return $this->stmt ?: $this->database->prepare($this->build());
 		}
 
-		public function run() {
+		public function run($parameters = []) {
 			$stmt = $this->prepare();
-			$stmt->execute($this->parameters);
+
+			if($parameters) {
+				foreach($parameters as &$parameter) {
+					if(is_object($parameter) && isset($parameter->id))
+						$parameter = $parameter->id;
+				}
+
+				$stmt->execute($parameters);
+			} else
+				$stmt->execute($this->parameters);
 
 			return $stmt;
 		}
