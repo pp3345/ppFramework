@@ -51,14 +51,14 @@
 			$this->$name = $value;
 		}
 
-		public function __debugInfo() {
+		/*public function __debugInfo() {
 			$retval = [];
 
 			foreach($this as $name => $value)
 				$retval[$name] = $this->__get($name);
 
 			return $retval;
-		}
+		}*/
 
 		public function __sleep() {
 			return ["id"];
