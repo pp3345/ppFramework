@@ -89,27 +89,25 @@
 			} while($uri = substr($uri, 0, strrpos($uri, '/')));
 
 			if(isset($controller)) {
-				do {
-					if(!isset($slicedURI[2]) || (count($slicedURI) == 3 && !$slicedURI[2])) {
-						if(!is_callable([$controller, $slicedURI[1]])) {
-							$this->routeDefault();
-						}
+				if(!isset($slicedURI[2]) || (count($slicedURI) == 3 && !$slicedURI[2])) {
+					if(!is_callable([$controller, $slicedURI[1]])) {
+						$this->routeDefault();
+					}
 
-						$controller->$slicedURI[1]();
+					$controller->$slicedURI[1]();
+
+					return;
+				}
+
+				for($i = count($slicedURI) - 2; $i; $i--) {
+					$function = implode(array_slice($slicedURI, 2, $i));
+
+					if(is_callable([$controller, $function])) {
+						$controller->$function(...array_map('urldecode', array_slice($slicedURI, $i + 2, count($slicedURI) - $i)));
 
 						return;
 					}
-
-					for($i = count($slicedURI) - 2; $i; $i--) {
-						$function = implode(array_slice($slicedURI, 2, $i));
-
-						if(is_callable([$controller, $function])) {
-							$controller->$function(...array_map('urldecode', array_slice($slicedURI, $i + 2, count($slicedURI) - $i)));
-
-							return;
-						}
-					}
-				} while(false);
+				}
 			}
 
 			$this->routeDefault();
