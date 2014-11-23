@@ -42,12 +42,14 @@
 				    continue;
 			    }
 
-			    throw new UnknownMiddlewareException("Middleware '{$call}' is unknown");
+			    throw new UnknownMiddlewareException("Middleware '$call' is unknown");
 		    }
 
 		    return function(...$arguments) use($calls) {
-			    foreach($calls as $call)
-				    $arguments = $call(...$arguments);
+			    foreach($calls as $call) {
+				    if(is_array($retval = $call(...$arguments)))
+					    $arguments = $retval;
+			    }
 		    };
 	    }
     }
