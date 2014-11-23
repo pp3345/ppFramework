@@ -54,12 +54,6 @@
 		public function route($method, $originalURI) {
 			$slicedURI = explode('/', urldecode($originalURI));
 
-			if(!isset($slicedURI[1]) || !$slicedURI[1]) {
-				$this->routeDefault($slicedURI);
-
-				return;
-			}
-
 			$classPath = $this->application . "\\Controller\\" . ucfirst($slicedURI[1]);
 
 			$uri = $originalURI;
@@ -85,7 +79,7 @@
 				do {
 					if(!isset($slicedURI[2]) || (count($slicedURI) == 3 && !$slicedURI[2])) {
 						if(!is_callable([$controller, $slicedURI[1]])) {
-							throw new NotFoundException();
+							$this->routeDefault();
 						}
 
 						$controller->$slicedURI[1]();
@@ -105,7 +99,7 @@
 				} while(false);
 			}
 
-			throw new NotFoundException();
+			$this->routeDefault();
 		}
 
 		public function routeDefault() {
