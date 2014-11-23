@@ -22,6 +22,7 @@
 	use Exception;
 	use net\pp3345\ppFramework\Exception\HTTPException;
 	use net\pp3345\ppFramework\Exception\NotFoundException;
+	use net\pp3345\ppFramework\Exception\UnknownNamedRouteException;
 	use net\pp3345\ppFramework\Singleton;
 	use net\pp3345\ppFramework\View;
 
@@ -30,6 +31,7 @@
 
 		public $application = __NAMESPACE__;
 		protected $routes = [];
+		protected $namedRoutes = [];
 
 		protected function __construct() {
 			set_error_handler(function ($severity, $string, $file, $line) {
@@ -52,6 +54,17 @@
 		}
 
 		public function route($method, $originalURI) {
+			if($originalURI[0] != '/') {
+				$namedRoute = ($argumentPos = strpos($originalURI, "/")) ? $namedRoute = substr($originalURI, 0, $argumentPos) : $originalURI;
+
+				if(isset($this->namedRoutes[$method][$namedRoute]))
+					$originalURI = $this->namedRoutes[$method][$namedRoute] . ($argumentPos ? substr($originalURI, $argumentPos) : "");
+				elseif(isset($this->namedRoutes["*"][$namedRoute]))
+					$originalURI = $this->namedRoutes["*"][$namedRoute] . ($argumentPos ? substr($originalURI, $argumentPos) : "");
+				else
+					$originalURI = "/" . $originalURI;
+			}
+
 			$slicedURI = explode('/', urldecode($originalURI));
 
 			$classPath = $this->application . "\\Controller\\" . ucfirst($slicedURI[1]);
@@ -118,10 +131,23 @@
 			}
 		}
 
-		public function addRoute($path, callable $callback, $methods = ['*']) {
+		public function addRoute($path, $callback, $methods = ['*']) {
 			foreach((array) $methods as $method) {
-				$this->routes[$method][$path] = $callback;
+				if(is_callable($callback))
+					$this->routes[$method][$path] = $callback;
+				else
+					$this->namedRoutes[$method][$callback] = $path;
 			}
+		}
+
+		public function getNamedRouteLocation($name, $method = "GET") {
+			if(isset($this->namedRoutes[$name][$method]))
+				return $this->namedRoutes[$name][$method];
+
+			if(isset($this->namedRoutes[$name]['*']))
+				return $this->namedRoutes[$name]['*'];
+
+			throw new UnknownNamedRouteException("The named route '{$method} {$name}' is unknown");
 		}
 	}
 
