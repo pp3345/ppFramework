@@ -52,43 +52,20 @@
 		}
 
 		public function route($method, $originalURI) {
-			$uri = explode('/', urldecode($originalURI));
+			$slicedURI = explode('/', urldecode($originalURI));
 
-			if(!isset($uri[1]) || !$uri[1]) {
-				$this->routeDefault($uri);
+			if(!isset($slicedURI[1]) || !$slicedURI[1]) {
+				$this->routeDefault($slicedURI);
 
 				return;
 			}
 
-			$classPath = $this->application . "\\Controller\\" . ucfirst($uri[1]);
-
-			if(class_exists($classPath) && is_callable($classPath . "::getInstance")) {
-				$controller = $classPath::getInstance();
-
-				do {
-					if(!isset($uri[2]) || (count($uri) == 3 && !$uri[2])) {
-						if(!is_callable([$controller, $uri[1]])) {
-							throw new NotFoundException();
-						}
-
-						$controller->$uri[1]();
-
-						return;
-					}
-
-					for($i = count($uri) - 2; $i; $i--) {
-						$function = implode(array_slice($uri, 2, $i));
-
-						if(is_callable([$controller, $function])) {
-							$controller->$function(...array_map('urldecode', array_slice($uri, $i + 2, count($uri) - $i)));
-
-							return;
-						}
-					}
-				} while(false);
-			}
+			$classPath = $this->application . "\\Controller\\" . ucfirst($slicedURI[1]);
 
 			$uri = $originalURI;
+
+			if(class_exists($classPath) && is_callable($classPath . "::getInstance"))
+				$controller = $classPath::getInstance();
 
 			do {
 				if(isset($this->routes[$method][$uri])) {
@@ -103,6 +80,30 @@
 					return;
 				}
 			} while($uri = substr($uri, 0, strrpos($uri, '/')));
+
+			if(isset($controller)) {
+				do {
+					if(!isset($slicedURI[2]) || (count($slicedURI) == 3 && !$slicedURI[2])) {
+						if(!is_callable([$controller, $slicedURI[1]])) {
+							throw new NotFoundException();
+						}
+
+						$controller->$slicedURI[1]();
+
+						return;
+					}
+
+					for($i = count($slicedURI) - 2; $i; $i--) {
+						$function = implode(array_slice($slicedURI, 2, $i));
+
+						if(is_callable([$controller, $function])) {
+							$controller->$function(...array_map('urldecode', array_slice($slicedURI, $i + 2, count($slicedURI) - $i)));
+
+							return;
+						}
+					}
+				} while(false);
+			}
 
 			throw new NotFoundException();
 		}
