@@ -68,6 +68,10 @@
 			self::__construct($this->id);
 		}
 
+		public function __isset($name) {
+			return isset($this->$name) || (isset(self::$foreignKeys) && isset(self::$foreignKeys[$name]));
+		}
+
 		/**
 		 * @param $key
 		 *
