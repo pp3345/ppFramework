@@ -65,6 +65,9 @@
 					$originalURI = "/" . $originalURI;
 			}
 
+			if($query = strpos($originalURI, '?'))
+				$originalURI = substr($originalURI, 0, $query);
+
 			$slicedURI = explode('/', urldecode($originalURI));
 
 			$classPath = $this->application . "\\Controller\\" . ucfirst($slicedURI[1]);
