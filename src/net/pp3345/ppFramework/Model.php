@@ -26,8 +26,8 @@
 		private static $cache = [];
 		public $id = 0;
 
-		public function __construct($id = 0, \stdClass $dataset = null) {
-			if($id) {
+		public function __construct($id = null, \stdClass $dataset = null) {
+			if($id !== null) {
 				// Fetch dataset and copy properties to object
 				foreach($dataset ?: $this->fetchFromDatabase($id) as $name => $value)
 					$this->$name = $value;
