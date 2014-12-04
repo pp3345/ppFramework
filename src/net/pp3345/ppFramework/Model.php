@@ -430,4 +430,8 @@
 
 			return $elements;
 		}
+
+		public static function clearCache() {
+			self::$cache = [];
+		}
 	}
