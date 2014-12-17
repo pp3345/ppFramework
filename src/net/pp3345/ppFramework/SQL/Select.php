@@ -450,7 +450,8 @@
 			$stmt = $this->run($parameters);
 
 			if($model = $this->model) {
-				$result = $stmt->fetchObject();
+				if(!($result = $stmt->fetchObject()))
+					return null;
 
 				if(!isset($result->id))
 					throw new \LogicException("Model queries must include id field");
