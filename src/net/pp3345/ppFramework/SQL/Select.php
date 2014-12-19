@@ -420,7 +420,7 @@
 					if(!isset($result->id))
 						throw new \LogicException("Model queries must include id field");
 
-					$retval[] = $model::get($result->id, $result);
+					$retval[$result->id] = $model::get($result->id, $result);
 				}
 
 				return $retval;
