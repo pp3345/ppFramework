@@ -344,7 +344,7 @@
 		 * @return $this[]
 		 * @throws \RuntimeException
 		 */
-		public static function getByRelation($relationTable, $object, $additionalFields = []) {
+		public static function getByRelation($relationTable, $object, &$additionalFields = []) {
 			if(get_class($object) == __CLASS__) {
 				$relationField        = self::$relations[$relationTable][0];
 				$foreignRelationField = self::$relations[$relationTable][1];
@@ -373,23 +373,25 @@
 
 			$stmt->execute();
 
-			$elements = [];
+			$elements = $aFields = [];
 
 			while($dataset = $stmt->fetchObject()) {
 				if(get_class($object) == __CLASS__) {
 					$elements[$dataset->$relationField == $object->id ? $dataset->$foreignRelationField : $dataset->$relationField] = self::get($dataset->$relationField == $object->id ? $dataset->$foreignRelationField : $dataset->$relationField);
 
 					foreach($additionalFields as $name) {
-						$elements['fields'][$dataset->$relationField == $object->id ? $dataset->$foreignRelationField : $dataset->$relationField][$name] = $dataset->$name;
+						$aFields[$dataset->$relationField == $object->id ? $dataset->$foreignRelationField : $dataset->$relationField][$name] = $dataset->$name;
 					}
 				} else {
 					$elements[$dataset->$relationField] = self::get($dataset->$relationField);
 
 					foreach($additionalFields as $name) {
-						$elements['fields'][$dataset->$relationField][$name] = $dataset->$name;
+						$aFields[$dataset->$relationField][$name] = $dataset->$name;
 					}
 				}
 			}
+
+			$additionalFields = $aFields;
 
 			return $elements;
 		}
