@@ -360,13 +360,13 @@
 				$relationField        = self::$relations[$relationTable];
 				$foreignRelationField = $object::$relations[$relationTable];
 
-				$query = "SELECT `" . $relationField . "`";
+				$query = "SELECT `" . self::TABLE . "`.*";
 
 				foreach($additionalFields as $name) {
-					$query .= ", `$name`";
+					$query .= ", `" . $relationTable . "`.`$name` AS `__A" . $name . "`";
 				}
 
-				$stmt = Database::getDefault()->prepare($query . " FROM " . $relationTable . " WHERE `" . $foreignRelationField . "` = :fid");
+				$stmt = Database::getDefault()->prepare($query . " FROM `" . $relationTable . "` JOIN `" . self::TABLE . "` ON `" . self::TABLE . "`.`id` = `" . $relationTable . "`.`" . $relationField ."` WHERE `" . $foreignRelationField . "` = :fid");
 			}
 
 			$stmt->bindValue(':fid', $object->id);
@@ -383,11 +383,11 @@
 						$aFields[$dataset->$relationField == $object->id ? $dataset->$foreignRelationField : $dataset->$relationField][$name] = $dataset->$name;
 					}
 				} else {
-					$elements[$dataset->$relationField] = self::get($dataset->$relationField);
-
 					foreach($additionalFields as $name) {
-						$aFields[$dataset->$relationField][$name] = $dataset->$name;
+						$aFields[$dataset->id][$name] = $dataset->{"__A" . $name};
 					}
+
+					$elements[$dataset->id] = self::get($dataset->id, $dataset);
 				}
 			}
 
