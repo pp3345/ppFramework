@@ -385,6 +385,7 @@
 				} else {
 					foreach($additionalFields as $name) {
 						$aFields[$dataset->id][$name] = $dataset->{"__A" . $name};
+						unset($dataset->{"__A" . $name});
 					}
 
 					$elements[$dataset->id] = self::get($dataset->id, $dataset);
