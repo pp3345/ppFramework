@@ -167,7 +167,7 @@
 			if($this->orderBy)
 				$this->orderBy .= ", ";
 
-			$this->orderBy .= "ORDER BY `{$field}` " . $sort;
+			$this->orderBy .= "ORDER BY `{$field}` " . $sort . " ";
 
 			return $this;
 		}
