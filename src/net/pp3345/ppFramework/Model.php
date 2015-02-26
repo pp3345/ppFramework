@@ -97,9 +97,8 @@
 			$stmt->bindValue(':id', $id);
 
 			// Execute query
-			if(!$stmt->execute() || !$stmt->rowCount()) {
-				throw new DataNotFoundException(get_class($this), $id);
-			}
+			if(!$stmt->execute() || !$stmt->rowCount())
+				throw new DataNotFoundException(__CLASS__, $id);
 
 			// Return dataset as stdClass object
 			return $stmt->fetchObject();
@@ -232,7 +231,7 @@
 			if(isset($stmts[$relationTable . $fieldChecksum])) {
 				$stmt = $stmts[$relationTable . $fieldChecksum];
 			} else {
-				if(get_class($object) == __CLASS__) {
+				if($object instanceof $this) {
 					$relationField        = self::$relations[$relationTable][0];
 					$foreignRelationField = self::$relations[$relationTable][1];
 				} else {
@@ -266,7 +265,7 @@
 			if(isset($stmts[$relationTable])) {
 				$stmt = $stmts[$relationTable];
 			} else {
-				if(get_class($object) == __CLASS__) {
+				if($object instanceof $this) {
 					$relationField        = self::$relations[$relationTable][0];
 					$foreignRelationField = self::$relations[$relationTable][1];
 					$stmt                 = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
@@ -291,7 +290,7 @@
 			if(isset($stmts[$relationTable])) {
 				$stmt = $stmts[$relationTable];
 			} else {
-				if(get_class($object) == __CLASS__) {
+				if($object instanceof $this) {
 					$relationField        = self::$relations[$relationTable][0];
 					$foreignRelationField = self::$relations[$relationTable][1];
 					$stmt                 = Database::getDefault()->prepare("SELECT 1 FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
