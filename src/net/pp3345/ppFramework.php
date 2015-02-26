@@ -20,6 +20,8 @@
 	namespace net\pp3345;
 
 	use Exception;
+	use net\pp3345\ppFramework\Exception\CLIComponentActionUnknownException;
+	use net\pp3345\ppFramework\Exception\CLIComponentNotFoundException;
 	use net\pp3345\ppFramework\Exception\HTTPException;
 	use net\pp3345\ppFramework\Exception\NotFoundException;
 	use net\pp3345\ppFramework\Exception\UnknownNamedRouteException;
@@ -44,13 +46,34 @@
 			session_start();
 
 			try {
-				$this->route($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
+				if(php_sapi_name() == 'cli')
+					$this->routeCLI(array_slice($_SERVER['argv'], 1));
+				else
+					$this->route($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
 			} catch(Exception $exception) {
 				if($exception instanceof HTTPException)
 					http_response_code($exception->getCode());
 
 				$this->exception($exception);
 			}
+		}
+
+		public function routeCLI($argv) {
+			if(!isset($argv[0]))
+				throw new CLIComponentNotFoundException("Please specify a CLI component to run.");
+
+			if((!class_exists($classPath = __CLASS__ . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance"))
+			&& (!class_exists($classPath = $this->application . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance")))
+				throw new CLIComponentNotFoundException("Unknown CLI component '$argv[0]'");
+
+			$component = $classPath::getInstance();
+
+			if(isset($argv[1]) && is_callable([$component, $argv[1]]))
+				$component->{$argv[1]}($this, ...array_slice($argv, 2));
+			else if(is_callable([$component, $argv[0]]))
+				$component->{$argv[0]}($this, ...array_slice($argv, 1));
+			else
+				throw new CLIComponentActionUnknownException(isset($argv[1]) ? "Unknown action '$argv[1]' specified for CLI component $argv[0]" : "Please specify an action for CLI component $argv[0]");
 		}
 
 		public function route($method, $originalURI) {
@@ -121,14 +144,21 @@
 		}
 
 		protected function exception(Exception $exception) {
-			$view = new View();
-			$view->setVariable('displayStack', ini_get('display_errors'));
-			$view->setVariable('exception', $exception);
+			if(php_sapi_name() == 'cli') {
+				echo "\e[031m" . ($exception->getMessage() ?: get_class($exception)) . "\e[0m" . PHP_EOL;
 
-			if($exception instanceof HTTPException) {
-				echo $view->render("@ppFramework/Exception/HTTP.twig");
+				if(ini_get('display_errors'))
+					echo PHP_EOL . "Stack trace:" . PHP_EOL . $exception->getTraceAsString() . PHP_EOL;
 			} else {
-				echo $view->render("@ppFramework/Exception/Error.twig");
+				$view = new View();
+				$view->setVariable('displayStack', ini_get('display_errors'));
+				$view->setVariable('exception', $exception);
+
+				if($exception instanceof HTTPException) {
+					echo $view->render("@ppFramework/Exception/HTTP.twig");
+				} else {
+					echo $view->render("@ppFramework/Exception/Error.twig");
+				}
 			}
 		}
 
