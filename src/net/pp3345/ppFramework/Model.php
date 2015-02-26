@@ -344,7 +344,7 @@
 		 * @throws \RuntimeException
 		 */
 		public static function getByRelation($relationTable, $object, &$additionalFields = []) {
-			if(get_class($object) == __CLASS__) {
+			if($self = get_class($object) == __CLASS__) {
 				$relationField        = self::$relations[$relationTable][0];
 				$foreignRelationField = self::$relations[$relationTable][1];
 
@@ -375,7 +375,7 @@
 			$elements = $aFields = [];
 
 			while($dataset = $stmt->fetchObject()) {
-				if(get_class($object) == __CLASS__) {
+				if($self) {
 					$elements[$dataset->$relationField == $object->id ? $dataset->$foreignRelationField : $dataset->$relationField] = self::get($dataset->$relationField == $object->id ? $dataset->$foreignRelationField : $dataset->$relationField);
 
 					foreach($additionalFields as $name) {
