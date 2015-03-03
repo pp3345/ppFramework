@@ -334,6 +334,8 @@
 		}
 
 		public function build() {
+			$model = $this->model;
+
 			$query = "SELECT ";
 
 			if($this->distinct)
@@ -366,14 +368,14 @@
 				$query[strlen($query) - 1] = " ";
 			}
 
-			if(!$this->fields && !$this->rawFields)
-				$query .= "* ";
+			if(!$this->fields && !$this->rawFields) {
+				if($model)
+					$query .= "`" . $model::TABLE . "`.* ";
+				else
+					$query .= "* ";
+			}
 
-			if($this->model) {
-				$model = $this->model;
-				$query .= "FROM `" . $model::TABLE . "` ";
-			} else if($this->table)
-				$query .= "FROM `{$this->table}` ";
+			$query .= "FROM `" . ($model ? $model::TABLE : $this->table) . "` ";
 
 			$query .= $this->joins;
 
