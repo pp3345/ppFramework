@@ -391,7 +391,7 @@
 		}
 
 		public function prepare() {
-			return $this->stmt ?: $this->database->prepare($this->build());
+			return $this->stmt ?: $this->stmt = $this->database->prepare($this->build());
 		}
 
 		public function run($parameters = []) {
