@@ -20,6 +20,7 @@
 	namespace net\pp3345;
 
 	use Exception;
+	use net\pp3345\ppFramework\CLIColors;
 	use net\pp3345\ppFramework\Exception\CLIComponentActionUnknownException;
 	use net\pp3345\ppFramework\Exception\CLIComponentNotFoundException;
 	use net\pp3345\ppFramework\Exception\HTTPException;
@@ -145,7 +146,7 @@
 
 		protected function exception(Exception $exception) {
 			if(php_sapi_name() == 'cli') {
-				echo "\e[031m" . ($exception->getMessage() ?: get_class($exception)) . "\e[0m" . PHP_EOL;
+				echo CLIColors::$red . ($exception->getMessage() ?: get_class($exception)) . CLIColors::$reset . PHP_EOL;
 
 				if(ini_get('display_errors'))
 					echo PHP_EOL . "Stack trace:" . PHP_EOL . $exception->getTraceAsString() . PHP_EOL;
