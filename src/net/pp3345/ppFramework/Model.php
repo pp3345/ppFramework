@@ -212,6 +212,26 @@
 			return isset(self::$cache[$id]) ? self::$cache[$id] : new self($id, $dataset);
 		}
 
+		public static function getBulk(array $ids) {
+			static $stmts = [];
+
+			if(!$ids)
+				return [];
+
+			$stmt = isset($stmts[count($ids)])
+				? $stmts[count($ids)]
+				: ($stmts[count($ids)] = Database::getDefault()->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` IN(" . implode(",", array_fill(0, count($ids), "?")) . ")"));
+
+			$stmt->execute($ids);
+
+			$retval = [];
+
+			while($dataset = $stmt->fetchObject())
+				$retval[$dataset->id] = self::get($dataset->id, $dataset);
+
+			return $retval;
+		}
+
 		/**
 		 * @return Select
 		 */
