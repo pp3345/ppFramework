@@ -119,6 +119,7 @@
 				if(!isset($slicedURI[2]) || (count($slicedURI) == 3 && !$slicedURI[2])) {
 					if(!is_callable([$controller, $slicedURI[1]])) {
 						$this->routeDefault();
+						return;
 					}
 
 					$controller->$slicedURI[1]();
