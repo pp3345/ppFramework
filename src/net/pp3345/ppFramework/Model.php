@@ -257,7 +257,7 @@
 		 * @return Select
 		 */
 		public static function lookup() {
-			return (new Select())->model(get_called_class());
+			return (new Select())->model(static::class);
 		}
 
 		public static function getForeignKeys() {
