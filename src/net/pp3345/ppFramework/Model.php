@@ -232,6 +232,27 @@
 			return $retval;
 		}
 
+		public static function getBulkOrdered(array $ids) {
+			static $stmts = [];
+
+			if(!$ids)
+				return [];
+
+			// http://stackoverflow.com/questions/1631723/maintaining-order-in-mysql-in-query
+			$stmt = isset($stmts[count($ids)])
+				? $stmts[count($ids)]
+				: ($stmts[count($ids)] = Database::getDefault()->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` IN(" . ($filled = implode(",", array_fill(0, count($ids), "?"))) . ") ORDER BY FIELD(`id`," . $filled . ")"));
+
+			$stmt->execute(array_merge($ids, $ids));
+
+			$retval = [];
+
+			while($dataset = $stmt->fetchObject())
+				$retval[$dataset->id] = self::get($dataset->id, $dataset);
+
+			return $retval;
+		}
+
 		/**
 		 * @return Select
 		 */
