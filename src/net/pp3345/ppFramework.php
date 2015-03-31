@@ -163,11 +163,7 @@
 				$view->setVariable('displayStack', ini_get('display_errors'));
 				$view->setVariable('exception', $exception);
 
-				if($exception instanceof HTTPException) {
-					echo $view->render("@ppFramework/Exception/HTTP.twig");
-				} else {
-					echo $view->render("@ppFramework/Exception/Error.twig");
-				}
+				echo $view->render($exception instanceof HTTPException ? "@ppFramework/Exception/HTTP.twig" : "@ppFramework/Exception/Error.twig");
 			}
 		}
 
