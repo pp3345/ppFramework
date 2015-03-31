@@ -51,14 +51,27 @@
 			$this->$name = $value;
 		}
 
-		/*public function __debugInfo() {
+		public function __debugInfo() {
+			static $recursion = [];
+
+			if(isset($recursion[$this->id]))
+				return "[" . __CLASS__ . ":" . $this->id . "] *RECURSION*";
+
+			$recursion[$this->id] = true;
+
 			$retval = [];
 
-			foreach($this as $name => $value)
+			foreach($this as $name => $value) {
 				$retval[$name] = $this->__get($name);
 
+				if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name]) && $retval[$name] instanceof self::$foreignKeys[$name])
+					$retval[$name] = $retval[$name]->__debugInfo();
+			}
+
+			unset($recursion[$this->id]);
+
 			return $retval;
-		}*/
+		}
 
 		public function __sleep() {
 			return ["id"];
