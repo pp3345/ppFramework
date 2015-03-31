@@ -119,6 +119,7 @@
 				if(!isset($slicedURI[2]) || (count($slicedURI) == 3 && !$slicedURI[2])) {
 					if(!is_callable([$controller, $slicedURI[1]])) {
 						$this->routeDefault();
+
 						return;
 					}
 
@@ -135,6 +136,12 @@
 
 						return;
 					}
+				}
+
+				if(is_callable([$controller, $slicedURI[1]])) {
+					$controller->$slicedURI[1](...array_map('urldecode', array_slice($slicedURI, 1)));
+
+					return;
 				}
 			}
 
