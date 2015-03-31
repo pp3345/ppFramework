@@ -419,7 +419,7 @@
 					$query .= ", `" . $relationTable . "`.`$name` AS `__A" . $name . "`";
 				}
 
-				$stmt = Database::getDefault()->prepare($query . " FROM `" . $relationTable . "` JOIN `" . self::TABLE . "` ON `" . self::TABLE . "`.`id` = `" . $relationTable . "`.`" . $relationField ."` WHERE `" . $foreignRelationField . "` = :fid");
+				$stmt = Database::getDefault()->prepare($query . " FROM `" . $relationTable . "` JOIN `" . self::TABLE . "` ON `" . self::TABLE . "`.`id` = `" . $relationTable . "`.`" . $relationField ."` WHERE `" . $relationTable . "`.`" . $foreignRelationField . "` = :fid");
 			}
 
 			$stmt->bindValue(':fid', $object->id);
