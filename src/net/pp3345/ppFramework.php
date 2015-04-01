@@ -139,7 +139,7 @@
 				}
 
 				if(is_callable([$controller, $slicedURI[1]])) {
-					$controller->$slicedURI[1](...array_map('urldecode', array_slice($slicedURI, 1)));
+					$controller->$slicedURI[1](...array_map('urldecode', array_slice($slicedURI, 2)));
 
 					return;
 				}
