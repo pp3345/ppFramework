@@ -338,6 +338,19 @@
 			$stmt->execute();
 		}
 
+		public function deleteOneWayRelation($relationTable, self $object) {
+			static $stmts = [];
+
+			if(isset($stmts[$relationTable]))
+				$stmt = $stmts[$relationTable];
+			else
+				$stmts[$relationTable] = $stmt = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = :id AND `" . self::$relations[$relationTable][1] . "` = :fid");
+
+			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
+
+			return (bool) $stmt->rowCount();
+		}
+
 		public function hasRelation($relationTable, $object) {
 			static $stmts = [];
 
@@ -361,6 +374,19 @@
 			$stmt->bindValue(':fid', $object->id);
 
 			$stmt->execute();
+
+			return (bool) $stmt->rowCount();
+		}
+
+		public function hasOneWayRelation($relationTable, self $object) {
+			static $stmts = [];
+
+			if(isset($stmts[$relationTable]))
+				$stmt = $stmts[$relationTable];
+			else
+				$stmts[$relationTable] = $stmt = Database::getDefault()->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = :id AND `" . self::$relations[$relationTable][1] . "` = :fid");
+
+			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
 
 			return (bool) $stmt->rowCount();
 		}
