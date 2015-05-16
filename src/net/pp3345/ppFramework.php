@@ -63,6 +63,14 @@
 			if(!isset($argv[0]))
 				throw new CLIComponentNotFoundException("Please specify a CLI component to run.");
 
+			if($argv[0] == "--no-colors") {
+				CLIColors::disable();
+				array_shift($argv);
+
+				if(!isset($argv[0]))
+					throw new CLIComponentNotFoundException("Please specify a CLI component to run.");
+			}
+
 			if((!class_exists($classPath = __CLASS__ . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance"))
 			&& (!class_exists($classPath = $this->application . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance")))
 				throw new CLIComponentNotFoundException("Unknown CLI component '$argv[0]'");
