@@ -105,21 +105,6 @@
 			return isset($this->$name) || (isset(self::$foreignKeys) && isset(self::$foreignKeys[$name]));
 		}
 
-		private function fetchFromDatabase($id) {
-			static $stmt = null;
-
-			// Prepare query
-			if(!$stmt)
-				$stmt = Database::getDefault()->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
-
-			// Execute query
-			if(!$stmt->execute([$id]) || !$stmt->rowCount())
-				throw new DataNotFoundException(__CLASS__, $id);
-
-			// Return dataset as stdClass object
-			return $stmt->fetchObject();
-		}
-
 		public function save() {
 			/**
 			 * @var $stmt \PDOStatement
