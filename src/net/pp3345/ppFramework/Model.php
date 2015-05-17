@@ -28,9 +28,23 @@
 
 		public function __construct($id = null, \stdClass $dataset = null) {
 			if($id !== null) {
-				// Fetch dataset and copy properties to object
-				foreach($dataset ?: $this->fetchFromDatabase($id) as $name => $value)
-					$this->$name = $value;
+				if($dataset) {
+					foreach($dataset as $name => $value)
+						$this->$name = $value;
+				} else {
+					static $stmt = null;
+
+					// Prepare query
+					if(!$stmt)
+						$stmt = Database::getDefault()->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
+
+					// Execute query
+					if(!$stmt->execute([$id]) || !$stmt->rowCount())
+						throw new DataNotFoundException(__CLASS__, $id);
+
+					foreach($stmt->fetch(Database::FETCH_ASSOC) as $name => $value)
+						$this->$name = $value;
+				}
 
 				// Add to cache
 				self::$cache[$this->id] = $this;
@@ -38,8 +52,14 @@
 		}
 
 		public function __get($name) {
-			if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name]))
-				return $this->fetchForeignKey($name);
+			if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name])) {
+				if($this->$name instanceof self::$foreignKeys[$name])
+					return $this->$name;
+
+				$class = self::$foreignKeys[$name];
+
+				return $this->$name ? $this->$name = $class::get($this->$name) : null;
+			}
 
 			return $this->$name;
 		}
@@ -85,32 +105,15 @@
 			return isset($this->$name) || (isset(self::$foreignKeys) && isset(self::$foreignKeys[$name]));
 		}
 
-		/**
-		 * @param $key
-		 *
-		 * @throws \Exception
-		 * @return Model|null
-		 */
-		private function fetchForeignKey($key) {
-			if($this->$key instanceof self::$foreignKeys[$key])
-				return $this->$key;
-
-			$class = self::$foreignKeys[$key];
-
-			return $this->$key ? $this->$key = $class::get($this->$key) : null;
-		}
-
 		private function fetchFromDatabase($id) {
 			static $stmt = null;
 
 			// Prepare query
 			if(!$stmt)
-				$stmt = Database::getDefault()->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = :id");
-
-			$stmt->bindValue(':id', $id);
+				$stmt = Database::getDefault()->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
 
 			// Execute query
-			if(!$stmt->execute() || !$stmt->rowCount())
+			if(!$stmt->execute([$id]) || !$stmt->rowCount())
 				throw new DataNotFoundException(__CLASS__, $id);
 
 			// Return dataset as stdClass object
@@ -118,6 +121,9 @@
 		}
 
 		public function save() {
+			/**
+			 * @var $stmt \PDOStatement
+			 */
 			static $stmt = null;
 
 			if(!$stmt) {
@@ -125,11 +131,19 @@
 				$query = "INSERT INTO `" . self::TABLE . "` SET ";
 
 				if(isset(self::$databaseFields)) {
-					foreach(self::$databaseFields as $name => $value) {
-						$query .= "`{$name}` = :{$name},";
+					$parameters = [];
+
+					foreach(self::$databaseFields as $field) {
+						$query .= "`{$field}` = ?,";
+						$parameters[] = is_object($this->$field) ? $this->$field->id : $this->$field;
 					}
-				} else foreach($this as $name => $value) {
-					$query .= "`{$name}` = :{$name},";
+				} else {
+					$parameters = [];
+
+					foreach($this as $field => $value) {
+						$query .= "`{$field}` = ?,";
+						$parameters[] = is_object($value) ? $value->id : $value; // Assume objects are models
+					}
 				}
 
 				// Remove trailing comma
@@ -137,27 +151,35 @@
 
 				// Prepare query
 				$stmt = Database::getDefault()->prepare($query);
+				$stmt->execute($parameters);
+			} else if(isset(self::$databaseFields)) {
+				$parameters = [];
+
+				foreach(self::$databaseFields as $field)
+					$parameters[] = is_object($this->$field) ? $this->$field->id : $this->$field;
+
+				$stmt->execute($parameters);
+			} else {
+				$parameters = [];
+
+				foreach($this as $value)
+					$parameters[] = is_object($value) ? $value->id : $value;
+
+				$stmt->execute($parameters);
 			}
 
-			// Bind parameters
-			foreach($this as $name => $value) {
-				if(isset(self::$databaseFields) && !isset(self::$databaseFields[$name]))
-					continue;
-
-				$stmt->bindValue(":" . $name, is_object($value) ? $value->id : $value);
-			}
-
-			// Execute query
-			$stmt->execute();
-
+			// ID might have been set explicitly (no AUTO_INCREMENT)
 			if(!$this->id)
 				$this->id = Database::getDefault()->lastInsertID();
 
-			// Add to cache
+			// Cache object
 			self::$cache[$this->id] = $this;
 		}
 
 		public function update() {
+			/**
+			 * @var $stmt \PDOStatement
+			 */
 			static $stmt = null;
 
 			if(!$this->id) {
@@ -171,42 +193,57 @@
 				$query = "UPDATE `" . self::TABLE . "` SET ";
 
 				if(isset(self::$databaseFields)) {
-					foreach(self::$databaseFields as $name => $value) {
-						$query .= "`{$name}` = :{$name},";
+					$parameters = [];
+
+					foreach(self::$databaseFields as $field) {
+						$query .= "`{$field}` = ?,";
+						$parameters[] = is_object($this->$field) ? $this->$field->id : $this->$field;
 					}
-				} else foreach($this as $name => $value) {
-					$query .= "`{$name}` = :{$name},";
+				} else {
+					$parameters = [];
+
+					foreach($this as $field => $value) {
+						$query .= "`{$field}` = ?,";
+						$parameters[] = is_object($value) ? $value->id : $value;
+					}
 				}
 
 				// Remove trailing comma
 				$query[strlen($query) - 1] = " ";
 
 				// Set query condition
-				$query .= "WHERE `id` = :id";
+				$query .= "WHERE `id` = ?";
+				$parameters[] = $this->id;
 
 				// Prepare query
 				$stmt = Database::getDefault()->prepare($query);
+				$stmt->execute($parameters);
+			} else if(isset(self::$databaseFields)) {
+				$parameters = [];
+
+				foreach(self::$databaseFields as $field)
+					$parameters[] = is_object($this->$field) ? $this->$field->id : $this->$field;
+
+				$parameters[] = $this->id;
+				$stmt->execute($parameters);
+			} else {
+				$parameters = [];
+
+				foreach($this as $value)
+					$parameters[] = is_object($value) ? $value->id : $value;
+
+				$parameters[] = $this->id;
+				$stmt->execute($parameters);
 			}
-
-			// Bind parameters
-			foreach($this as $name => $value) {
-				if(isset(self::$databaseFields) && !isset(self::$databaseFields[$name]))
-					continue;
-
-				$stmt->bindValue(":" . $name, is_object($value) ? $value->id : $value);
-			}
-
-			$stmt->execute();
 		}
 
 		public function delete() {
 			static $stmt = null;
 
 			if(!$stmt)
-				$stmt = Database::getDefault()->prepare("DELETE FROM `" . self::TABLE . "` WHERE `id` = :id");
+				$stmt = Database::getDefault()->prepare("DELETE FROM `" . self::TABLE . "` WHERE `id` = ?");
 
-			$stmt->bindValue(':id', $this->id);
-			$stmt->execute();
+			$stmt->execute([$this->id]);
 
 			// Remove from cache
 			unset(self::$cache[$this->id]);
@@ -293,7 +330,7 @@
 					$foreignRelationField = $object::$relations[$relationTable];
 				}
 
-				$query = "INSERT INTO `{$relationTable}` SET `{$relationField}` = :id, `{$foreignRelationField}` = :fid";
+				$query = "INSERT INTO `{$relationTable}` SET `{$relationField}` = ?, `{$foreignRelationField}` = ?";
 
 				foreach($fields as $name => $value) {
 					$query .= ", `$name` = :$name";
@@ -303,14 +340,12 @@
 				$stmts[$relationTable . $fieldChecksum] = $stmt;
 			}
 
-			$stmt->bindValue(':id', $this->id);
-			$stmt->bindValue(':fid', $object->id);
+			$parameters = [$this->id, $object->id];
 
-			foreach($fields as $name => $value) {
-				$stmt->bindValue(':' . $name, $value);
-			}
+			foreach($fields as $name => $value)
+				$parameters[] = $value;
 
-			$stmt->execute();
+			$stmt->execute($parameters);
 		}
 
 		public function deleteRelation($relationTable, $object) {
@@ -323,19 +358,13 @@
 					$relationField        = self::$relations[$relationTable][0];
 					$foreignRelationField = self::$relations[$relationTable][1];
 					$stmt                 = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
-				} else {
-					$relationField        = self::$relations[$relationTable];
-					$foreignRelationField = $object::$relations[$relationTable];
-					$stmt                 = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `{$relationField}` = :id AND `{$foreignRelationField}` = :fid");
-				}
+				} else
+					$stmt                 = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable] . "` = :id AND `" . $object::$relations[$relationTable] . "` = :fid");
 
 				$stmts[$relationTable] = $stmt;
 			}
 
-			$stmt->bindValue(':id', $this->id);
-			$stmt->bindValue(':fid', $object->id);
-
-			$stmt->execute();
+			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
 		}
 
 		public function deleteOneWayRelation($relationTable, self $object) {
@@ -344,9 +373,9 @@
 			if(isset($stmts[$relationTable]))
 				$stmt = $stmts[$relationTable];
 			else
-				$stmts[$relationTable] = $stmt = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = :id AND `" . self::$relations[$relationTable][1] . "` = :fid");
+				$stmts[$relationTable] = $stmt = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = ? AND `" . self::$relations[$relationTable][1] . "` = ?");
 
-			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
+			$stmt->execute([$this->id, $object->id]);
 
 			return (bool) $stmt->rowCount();
 		}
@@ -361,19 +390,13 @@
 					$relationField        = self::$relations[$relationTable][0];
 					$foreignRelationField = self::$relations[$relationTable][1];
 					$stmt                 = Database::getDefault()->prepare("SELECT 1 FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
-				} else {
-					$relationField        = self::$relations[$relationTable];
-					$foreignRelationField = $object::$relations[$relationTable];
-					$stmt                 = Database::getDefault()->prepare("SELECT 1 FROM `{$relationTable}` WHERE `{$relationField}` = :id AND `{$foreignRelationField}` = :fid");
-				}
+				} else
+					$stmt                 = Database::getDefault()->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable] . "` = :id AND `" . $object::$relations[$relationTable] . "` = :fid");
 
 				$stmts[$relationTable] = $stmt;
 			}
 
-			$stmt->bindValue(':id', $this->id);
-			$stmt->bindValue(':fid', $object->id);
-
-			$stmt->execute();
+			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
 
 			return (bool) $stmt->rowCount();
 		}
@@ -384,9 +407,9 @@
 			if(isset($stmts[$relationTable]))
 				$stmt = $stmts[$relationTable];
 			else
-				$stmts[$relationTable] = $stmt = Database::getDefault()->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = :id AND `" . self::$relations[$relationTable][1] . "` = :fid");
+				$stmts[$relationTable] = $stmt = Database::getDefault()->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = ? AND `" . self::$relations[$relationTable][1] . "` = ?");
 
-			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
+			$stmt->execute([$this->id, $object->id]);
 
 			return (bool) $stmt->rowCount();
 		}
@@ -397,23 +420,14 @@
 			if(isset($stmts[$relationTable])) {
 				$stmt = $stmts[$relationTable];
 			} else {
-				if(is_array(self::$relations[$relationTable])) {
-					$relationField        = self::$relations[$relationTable][0];
-					$foreignRelationField = self::$relations[$relationTable][1];
-
-					$stmt = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `{$relationField}` = :id OR `{$foreignRelationField}` = :id");
-				} else {
-					$relationField = self::$relations[$relationTable];
-
-					$stmt = Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `{$relationField}` = :id");
-				}
+				$stmt = is_array(self::$relations[$relationTable])
+					? Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = :id OR `" . self::$relations[$relationTable][1] . "` = :id")
+					: Database::getDefault()->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable] . "` = :id");
 
 				$stmts[$relationTable] = $stmt;
 			}
 
-			$stmt->bindValue(':id', $this->id);
-
-			$stmt->execute();
+			$stmt->execute([":id" => $this->id]);
 		}
 
 		/**
@@ -434,7 +448,7 @@
 					$query .= ", `$name`";
 				}
 
-				$stmt = Database::getDefault()->prepare($query . " FROM " . $relationTable . " WHERE `" . $foreignRelationField . "` = :fid OR `" . $relationField . "` = :fid");
+				$stmt = Database::getDefault()->prepare($query . " FROM `{$relationTable}` WHERE `{$foreignRelationField}` = :fid OR `{$relationField}` = :fid");
 			} else {
 				$relationField        = self::$relations[$relationTable];
 				$foreignRelationField = $object::$relations[$relationTable];
@@ -445,12 +459,10 @@
 					$query .= ", `" . $relationTable . "`.`$name` AS `__A" . $name . "`";
 				}
 
-				$stmt = Database::getDefault()->prepare($query . " FROM `" . $relationTable . "` JOIN `" . self::TABLE . "` ON `" . self::TABLE . "`.`id` = `" . $relationTable . "`.`" . $relationField ."` WHERE `" . $relationTable . "`.`" . $foreignRelationField . "` = :fid");
+				$stmt = Database::getDefault()->prepare($query . " FROM `{$relationTable}` JOIN `" . self::TABLE . "` ON `" . self::TABLE . "`.`id` = `{$relationTable}`.`{$relationField}` WHERE `{$relationTable}`.`{$foreignRelationField}` = :fid");
 			}
 
-			$stmt->bindValue(':fid', $object->id);
-
-			$stmt->execute();
+			$stmt->execute([":fid" => $object->id]);
 
 			$elements = $aFields = [];
 
@@ -482,7 +494,7 @@
 			if(isset($stmts[$relationTable])) {
 				$stmt = $stmts[$relationTable];
 			} else {
-				$stmt                  = Database::getDefault()->prepare("SELECT * FROM " . $relationTable);
+				$stmt                  = Database::getDefault()->prepare("SELECT * FROM `{$relationTable}`");
 				$stmts[$relationTable] = $stmt;
 			}
 
