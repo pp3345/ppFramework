@@ -318,7 +318,7 @@
 				$query = "INSERT INTO `{$relationTable}` SET `{$relationField}` = ?, `{$foreignRelationField}` = ?";
 
 				foreach($fields as $name => $value) {
-					$query .= ", `$name` = :$name";
+					$query .= ", `$name` = ?";
 				}
 
 				$stmt                                   = Database::getDefault()->prepare($query);
