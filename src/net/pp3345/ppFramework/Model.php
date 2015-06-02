@@ -302,10 +302,14 @@
 		public function addRelation($relationTable, $object, $fields = []) {
 			static $stmts = [];
 
-			$fieldChecksum = $fields ? crc32(json_encode(array_keys($fields))) : "";
+			$withFields = $relationTable . ($fields ? crc32(json_encode(array_keys($fields))) : "");
+			$parameters = [$this->id, $object->id];
 
-			if(isset($stmts[$relationTable . $fieldChecksum])) {
-				$stmt = $stmts[$relationTable . $fieldChecksum];
+			if(isset($stmts[$withFields])) {
+				foreach($fields as $name => $value)
+					$parameters[] = $value;
+
+				$stmts[$withFields]->execute($parameters);
 			} else {
 				if($object instanceof $this) {
 					$relationField        = self::$relations[$relationTable][0];
@@ -319,18 +323,15 @@
 
 				foreach($fields as $name => $value) {
 					$query .= ", `$name` = ?";
+					$parameters[] = $value;
 				}
 
 				$stmt                                   = Database::getDefault()->prepare($query);
-				$stmts[$relationTable . $fieldChecksum] = $stmt;
+				$stmts[$withFields] = $stmt;
+				$stmt->execute($parameters);
+
+				return;
 			}
-
-			$parameters = [$this->id, $object->id];
-
-			foreach($fields as $name => $value)
-				$parameters[] = $value;
-
-			$stmt->execute($parameters);
 		}
 
 		public function deleteRelation($relationTable, $object) {
