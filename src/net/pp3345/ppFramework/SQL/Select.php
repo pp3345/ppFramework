@@ -389,6 +389,9 @@
 			if($this->offset)
 				$query .= "OFFSET {$this->offset} ";
 
+			if($this->database->selectForUpdate)
+				$query .= " FOR UPDATE";
+
 			return $query;
 		}
 

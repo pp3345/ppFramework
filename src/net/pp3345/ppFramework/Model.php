@@ -31,12 +31,27 @@
 				if($dataset) {
 					foreach($dataset as $name => $value)
 						$this->$name = $value;
-				} else {
-					static $stmt = null;
 
-					// Prepare query
-					if(!$stmt)
-						$stmt = Database::getDefault()->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
+					// Add to cache
+					if(!Database::getDefault()->selectForUpdate)
+						self::$cache[$this->id] = $this;
+				} else {
+					$database = Database::getDefault();
+
+					if($database->selectForUpdate) {
+						// FOR UPDATE should not have negative effects outside of transactions
+						static $forUpdateStmt;
+
+						if(!$forUpdateStmt)
+							$forUpdateStmt = $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
+
+						$stmt = $forUpdateStmt;
+					} else {
+						static $stmt;
+
+						if(!$stmt)
+							$stmt = $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
+					}
 
 					// Execute query
 					if(!$stmt->execute([$id]) || !$stmt->rowCount())
@@ -44,10 +59,10 @@
 
 					foreach($stmt->fetch(Database::FETCH_ASSOC) as $name => $value)
 						$this->$name = $value;
-				}
 
-				// Add to cache
-				self::$cache[$this->id] = $this;
+					if(!$database->selectForUpdate)
+						self::$cache[$this->id] = $this; // We do not cache objects fetched with FOR UPDATE to ensure that restartable transactions work correctly
+				}
 			}
 		}
 

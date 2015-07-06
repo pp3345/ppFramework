@@ -24,8 +24,11 @@
 	class Database extends PDO {
 		private static $default;
 
-		public function __construct() {
-			parent::__construct(...func_get_args());
+		public  $selectForUpdate = false;
+		private $resetSelectForUpdate;
+
+		public function __construct(...$args) {
+			parent::__construct(...$args);
 
 			$this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 		}
@@ -42,5 +45,59 @@
 
 		public function setDefault() {
 			return self::$default = $this;
+		}
+
+		public function beginTransaction($selectForUpdate = null) {
+			if($selectForUpdate !== null) {
+				$this->resetSelectForUpdate = $this->selectForUpdate;
+				$this->selectForUpdate      = $selectForUpdate;
+			}
+
+			return parent::beginTransaction();
+		}
+
+		public function commit() {
+			if($this->resetSelectForUpdate !== null) {
+				$this->selectForUpdate      = $this->resetSelectForUpdate;
+				$this->resetSelectForUpdate = null;
+			}
+
+			return parent::commit();
+		}
+
+		public function rollBack() {
+			if($this->resetSelectForUpdate !== null) {
+				$this->selectForUpdate      = $this->resetSelectForUpdate;
+				$this->resetSelectForUpdate = null;
+			}
+
+			return parent::rollBack();
+		}
+
+		public function executeInTransaction(callable $call, callable $onError = null, $selectForUpdate = null) {
+			try {
+				$this->beginTransaction($selectForUpdate);
+
+				$retval = $call();
+
+				$this->commit();
+			} catch(\PDOException $e) {
+				$this->rollBack();
+
+				if($onError && $onError($e))
+					return $this->executeInTransaction($call, $selectForUpdate, $onError);
+
+				throw $e;
+			}
+
+			return $retval;
+		}
+
+		public static function onErrorRestartTransaction($n = 3) {
+			return function (\PDOException $e) use ($n) {
+				static $restarts = 0;
+
+				return ($e->getCode() == "40001" || $e->getCode() == "HY000") && $restarts++ < $n;
+			};
 		}
 	}
