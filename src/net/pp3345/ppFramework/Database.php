@@ -86,7 +86,7 @@
 				$this->rollBack();
 
 				if($onError && $onError($e))
-					return $this->executeInTransaction($call, $selectForUpdate, $onError);
+					return $this->executeInTransaction($call, $onError, $selectForUpdate);
 
 				throw $e;
 			}
