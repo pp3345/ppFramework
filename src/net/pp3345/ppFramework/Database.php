@@ -80,7 +80,8 @@
 
 				$retval = $call();
 
-				$this->commit();
+				if($this->inTransaction())
+					$this->commit();
 			} catch(\PDOException $e) {
 				$this->rollBack();
 
