@@ -22,6 +22,20 @@
 	use net\pp3345\ppFramework\Exception\DataNotFoundException;
 	use net\pp3345\ppFramework\SQL\Select;
 
+	// This gives us some more performance since it allows resolving the functions compile-time
+	use function \is_object;
+	use function \is_array;
+	use function \strlen;
+	use function \count;
+	use function \implode;
+	use function \array_fill;
+	use function \array_merge;
+	use function \get_class;
+	use function \gettype;
+	use function \crc32;
+	use function \json_encode;
+	use function \array_keys;
+
 	trait Model {
 		private static $cache = [];
 		public $id = 0;
@@ -57,7 +71,7 @@
 					if(!$stmt->execute([$id]) || !$stmt->rowCount())
 						throw new DataNotFoundException(__CLASS__, $id);
 
-					foreach($stmt->fetch(Database::FETCH_ASSOC) as $name => $value)
+					foreach($stmt->fetch(\PDO::FETCH_ASSOC) as $name => $value)
 						$this->$name = $value;
 
 					if(!$database->selectForUpdate)
