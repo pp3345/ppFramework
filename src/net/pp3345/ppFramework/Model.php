@@ -273,7 +273,7 @@
 		 * @return $this
 		 */
 		public static function get($id, \stdClass $dataset = null) {
-			return isset(self::$cache[$id]) ? self::$cache[$id] : new self($id, $dataset);
+			return isset(self::$cache[$id]) ? self::$cache[$id] : new static($id, $dataset);
 		}
 
 		public static function getBulk(array $ids) {
