@@ -41,8 +41,19 @@
 
 		public static function getEnvironment() {
 			if(!self::$environment) {
-				self::$environment = new Twig_Environment(new \Twig_Loader_Filesystem());
-				self::$environment->getLoader()->addPath(__DIR__ . "/View", "ppFramework");
+				$applicationReflector = new \ReflectionClass(Application::getInstance());
+				$loader = new \Twig_Loader_Filesystem();
+
+				self::$environment = new Twig_Environment($loader);
+
+				// ppFramework built-in views
+				$loader->addPath(__DIR__ . "/View", "ppFramework");
+
+				// Application view namespace
+				$path = dirname($applicationReflector->getFileName()) . "/" . $applicationReflector->getShortName() . "/View";
+
+				if(is_dir($path))
+					$loader->addPath($path, $applicationReflector->getShortName());
 			}
 
 			return self::$environment;
