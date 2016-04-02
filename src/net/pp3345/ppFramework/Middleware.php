@@ -37,12 +37,16 @@
 			    if(is_callable($call))
 				    continue;
 
-			    if(isset(self::$middlewares[$call])) {
-				    $call = self::$middlewares[$call];
-				    continue;
+			    if(!isset(self::$middlewares[$call])) {
+				    // Try autoloading middleware
+				    class_exists(Application::getInstance()->getApplicationNamespace() . "\\Middleware\\" . $call);
+				    class_exists(__NAMESPACE__ . "\\Middleware\\" . $call);
+
+				    if(!isset(self::$middlewares[$call]))
+					    throw new UnknownMiddlewareException("Middleware '$call' is unknown");
 			    }
 
-			    throw new UnknownMiddlewareException("Middleware '$call' is unknown");
+			    $call = self::$middlewares[$call];
 		    }
 
 		    return function(...$arguments) use($calls) {
