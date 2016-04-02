@@ -27,7 +27,7 @@
 	use net\pp3345\ppFramework\Exception\UnknownNamedRouteException;
 
 	class Application {
-		use Singleton;
+		use StaticSingleton;
 
 		private $applicationNamespace = "";
 		protected $routes = [];
