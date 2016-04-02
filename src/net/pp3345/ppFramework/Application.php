@@ -17,19 +17,16 @@
 	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-	namespace net\pp3345;
+	namespace net\pp3345\ppFramework;
 
 	use Exception;
-	use net\pp3345\ppFramework\CLIColors;
 	use net\pp3345\ppFramework\Exception\CLIComponentActionUnknownException;
 	use net\pp3345\ppFramework\Exception\CLIComponentNotFoundException;
 	use net\pp3345\ppFramework\Exception\HTTPException;
 	use net\pp3345\ppFramework\Exception\NotFoundException;
 	use net\pp3345\ppFramework\Exception\UnknownNamedRouteException;
-	use net\pp3345\ppFramework\Singleton;
-	use net\pp3345\ppFramework\View;
 
-	class ppFramework {
+	class Application {
 		use Singleton;
 
 		private $applicationNamespace = "";
