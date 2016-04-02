@@ -267,6 +267,11 @@
 			$this->__construct($this->id);
 		}
 
+		public function loadForeignKeys() {
+			foreach(self::$foreignKeys as $property => $class)
+				$this->__get($property);
+		}
+
 		/**
 		 * @param           $id
 		 * @param \stdClass $dataset
