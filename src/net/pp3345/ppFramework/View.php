@@ -19,6 +19,9 @@
 
 	namespace net\pp3345\ppFramework;
 
+	use net\pp3345\ppFramework\Exception\DuplicateHookException;
+	use net\pp3345\ppFramework\Hook\View\AfterRenderHook;
+	use net\pp3345\ppFramework\Hook\View\BeforeRenderHook;
 	use Twig_Environment;
 
 	class View {
@@ -26,8 +29,15 @@
 		 * @var Twig_Environment
 		 */
 		private static $environment;
-		private $vars = [];
 		private $context = [];
+		/**
+		 * @var BeforeRenderHook[]
+		 */
+		private static $beforeRender = [];
+		/**
+		 * @var AfterRenderHook[]
+		 */
+		private static $afterRender = [];
 
 		public static function getEnvironment() {
 			if(!self::$environment) {
@@ -38,12 +48,39 @@
 			return self::$environment;
 		}
 
+		public static function beforeRender(BeforeRenderHook $hook) {
+			if(in_array($hook, self::$beforeRender))
+				throw new DuplicateHookException(BeforeRenderHook::class);
+
+			self::$beforeRender[] = $hook;
+		}
+
+		public static function afterRender(AfterRenderHook $hook) {
+			if(in_array($hook, self::$afterRender))
+				throw new DuplicateHookException(AfterRenderHook::class);
+
+			self::$afterRender[] = $hook;
+		}
+
 		public function render($template) {
-			return self::getEnvironment()->render($template, $this->context);
+			foreach(self::$beforeRender as $hook)
+				$hook->beforeRenderView($this, $template);
+
+			$content = self::getEnvironment()->render($template, $this->context);
+
+			foreach(self::$afterRender as $hook)
+				$content = $hook->afterRenderView($this, $template, $content);
+
+			return $content;
+		}
+
+		public function getVariable($name) {
+			return $this->context[$name];
 		}
 
 		public function setVariable($name, $value) {
 			$this->context[$name] = $value;
+
 			return $this;
 		}
 
@@ -53,6 +90,7 @@
 
 		public function setVariables(array $variables) {
 			$this->context = array_merge($this->context, $variables);
+
 			return $this;
 		}
 	}
