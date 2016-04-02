@@ -20,7 +20,7 @@
 
     namespace net\pp3345\ppFramework;
 
-    class CLIColors {
+    final class CLIColors {
 	    public static $black = "\e[30m";
 	    public static $red = "\e[31m";
 	    public static $green = "\e[32m";
@@ -31,6 +31,9 @@
 	    public static $white = "\e[37m";
 
 	    public static $reset = "\e[0m";
+
+	    private function __construct() {
+	    }
 
 	    public static function enable() {
 		    self::$black = "\e[30m";
