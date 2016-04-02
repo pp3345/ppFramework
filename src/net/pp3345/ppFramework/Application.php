@@ -26,7 +26,7 @@
 	use net\pp3345\ppFramework\Exception\NotFoundException;
 	use net\pp3345\ppFramework\Exception\UnknownNamedRouteException;
 
-	class Application {
+	abstract class Application {
 		use StaticSingleton;
 
 		private $applicationNamespace = "";
