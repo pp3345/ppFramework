@@ -32,11 +32,13 @@
 	class ppFramework {
 		use Singleton;
 
-		public $application = __NAMESPACE__;
+		private $applicationNamespace = "";
 		protected $routes = [];
 		protected $namedRoutes = [];
 
 		protected function __construct() {
+			$this->applicationNamespace = static::class;
+
 			set_error_handler(function ($severity, $string, $file, $line) {
 				if(error_reporting() & $severity)
 					throw new \ErrorException($string, 0, $severity, $file, $line);
@@ -72,7 +74,7 @@
 			}
 
 			if((!class_exists($classPath = __CLASS__ . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance"))
-			&& (!class_exists($classPath = $this->application . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance")))
+			&& (!class_exists($classPath = $this->applicationNamespace . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance")))
 				throw new CLIComponentNotFoundException("Unknown CLI component '$argv[0]'");
 
 			$component = $classPath::getInstance();
@@ -102,7 +104,7 @@
 
 			$slicedURI = explode('/', urldecode($originalURI));
 
-			$classPath = $this->application . "\\Controller\\" . ucfirst($slicedURI[1]);
+			$classPath = $this->applicationNamespace . "\\Controller\\" . ucfirst($slicedURI[1]);
 
 			$uri = $originalURI;
 
@@ -192,6 +194,10 @@
 				return $this->namedRoutes[$name]['*'];
 
 			throw new UnknownNamedRouteException("The named route '{$method} {$name}' is unknown");
+		}
+
+		public function getApplicationNamespace() {
+			return $this->applicationNamespace;
 		}
 	}
 
