@@ -70,7 +70,7 @@
 					throw new CLIComponentNotFoundException("Please specify a CLI component to run.");
 			}
 
-			if((!class_exists($classPath = __CLASS__ . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance"))
+			if((!class_exists($classPath = __NAMESPACE__ . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance"))
 			&& (!class_exists($classPath = $this->applicationNamespace . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance")))
 				throw new CLIComponentNotFoundException("Unknown CLI component '$argv[0]'");
 
