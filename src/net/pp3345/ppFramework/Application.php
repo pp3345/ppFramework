@@ -52,9 +52,12 @@
 					$this->routeCLI(array_slice($_SERVER['argv'], 1));
 				else
 					$this->route($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
+			} catch(HTTPException $exception) {
+				http_response_code($exception->getCode());
+
+				$this->exception($exception);
 			} catch(Exception $exception) {
-				if($exception instanceof HTTPException)
-					http_response_code($exception->getCode());
+				http_response_code(500);
 
 				$this->exception($exception);
 			} catch(Error $exception) {
