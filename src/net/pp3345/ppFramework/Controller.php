@@ -19,6 +19,6 @@
 
 	namespace net\pp3345\ppFramework;
 
-	interface Controller {
-		public static function getInstance();
+	abstract class Controller {
+		use SingletonContainer;
 	}

@@ -105,7 +105,7 @@
 
 			$uri = $originalURI;
 
-			if(class_exists($classPath) && is_callable($classPath . "::getInstance"))
+			if(class_exists($classPath))
 				$controller = $classPath::getInstance();
 
 			do {
