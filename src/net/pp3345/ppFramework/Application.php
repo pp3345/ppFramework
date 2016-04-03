@@ -19,12 +19,14 @@
 
 	namespace net\pp3345\ppFramework;
 
+	use Error;
 	use Exception;
 	use net\pp3345\ppFramework\Exception\CLIComponentActionUnknownException;
 	use net\pp3345\ppFramework\Exception\CLIComponentNotFoundException;
 	use net\pp3345\ppFramework\Exception\HTTPException;
 	use net\pp3345\ppFramework\Exception\NotFoundException;
 	use net\pp3345\ppFramework\Exception\UnknownNamedRouteException;
+	use Throwable;
 
 	abstract class Application {
 		use StaticSingleton;
@@ -53,6 +55,10 @@
 			} catch(Exception $exception) {
 				if($exception instanceof HTTPException)
 					http_response_code($exception->getCode());
+
+				$this->exception($exception);
+			} catch(Error $exception) {
+				http_response_code(500);
 
 				$this->exception($exception);
 			}
@@ -159,7 +165,13 @@
 			throw new NotFoundException();
 		}
 
-		protected function exception(Exception $exception) {
+		/**
+		 * @param $exception
+		 */
+		protected function exception($exception) {
+			if(!($exception instanceof Exception) && !($exception instanceof Throwable))
+				throw new \InvalidArgumentException("Argument must be instance of Exception or Throwable, got " . (is_object($exception) ? get_class($exception) : gettype($exception)));
+
 			if(php_sapi_name() == 'cli') {
 				echo CLIColors::$red . ($exception->getMessage() ?: get_class($exception)) . CLIColors::$reset . PHP_EOL;
 
