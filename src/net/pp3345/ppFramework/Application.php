@@ -48,7 +48,7 @@
 			session_start();
 
 			try {
-				if(php_sapi_name() == 'cli')
+				if(PHP_SAPI == 'cli')
 					$this->routeCLI(array_slice($_SERVER['argv'], 1));
 				else
 					$this->route($_SERVER['REQUEST_METHOD'], $_SERVER['REQUEST_URI']);
