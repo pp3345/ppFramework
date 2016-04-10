@@ -31,6 +31,8 @@
 			parent::__construct(...$args);
 
 			$this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+			ModelRegistry::getInstance()->registerDatabase($this);
 		}
 
 		/**
@@ -44,7 +46,11 @@
 		}
 
 		public function setDefault() {
-			return self::$default = $this;
+			self::$default = $this;
+
+			ModelRegistry::getInstance()->switchDatabase($this);
+
+			return $this;
 		}
 
 		public function beginTransaction($selectForUpdate = null) {
@@ -78,11 +84,17 @@
 			try {
 				$this->beginTransaction($selectForUpdate);
 
+				ModelRegistry::getInstance()->activateTransactionalCache();
+
 				$retval = $call();
+
+				ModelRegistry::getInstance()->deactivateTransactionalCache();
 
 				if($this->inTransaction())
 					$this->commit();
 			} catch(\PDOException $e) {
+				ModelRegistry::getInstance()->deactivateTransactionalCache();
+
 				$this->rollBack();
 
 				if($onError && $onError($e))

@@ -42,6 +42,21 @@
 				if(error_reporting() & $severity)
 					throw new \ErrorException($string, 0, $severity, $file, $line);
 			});
+
+			foreach(spl_autoload_functions() as $function) {
+				spl_autoload_unregister($function);
+
+				$this->registerAutoload($function);
+			}
+		}
+
+		public function registerAutoload(callable $function) {
+			spl_autoload_register(function($class) use ($function) {
+				$function($class);
+
+				if(class_exists($class, false) && isset(class_uses($class)[Model::class]))
+					ModelRegistry::getInstance()->registerClass($class);
+			});
 		}
 
 		public function onRequest() {

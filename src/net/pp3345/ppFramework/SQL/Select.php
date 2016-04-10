@@ -425,7 +425,7 @@
 					if(!isset($result->id))
 						throw new \LogicException("Model queries must include id field");
 
-					$retval[$result->id] = $model::get($result->id, $result);
+					$retval[$result->id] = $model::get($result->id, $result, $this->database);
 				}
 
 				return $retval;
@@ -442,7 +442,7 @@
 					if(!isset($result->id))
 						throw new \LogicException("Model queries must include id field");
 
-					yield $model::get($result->id, $result);
+					yield $model::get($result->id, $result, $this->database);
 				}
 			} else {
 				while($result = $stmt->fetch()) {
@@ -461,7 +461,7 @@
 				if(!isset($result->id))
 					throw new \LogicException("Model queries must include id field");
 
-				return $model::get($result->id, $result);
+				return $model::get($result->id, $result, $this->database);
 			} else return $stmt->fetch();
 		}
 	}
