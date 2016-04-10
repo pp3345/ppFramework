@@ -12,6 +12,6 @@
 		 * @return $this
 		 */
 		public static function getInstance() {
-			return self::$_instances[static::class] ?: (self::$_instances[static::class] = new static);
+			return isset(self::$_instances[static::class]) ? self::$_instances[static::class] : (self::$_instances[static::class] = new static);
 		}
 	}
