@@ -33,9 +33,6 @@
 	use function \array_merge;
 	use function \get_class;
 	use function \gettype;
-	use function \crc32;
-	use function \json_encode;
-	use function \array_keys;
 
 	trait Model {
 		/**
