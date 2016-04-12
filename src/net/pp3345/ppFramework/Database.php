@@ -26,11 +26,13 @@
 
 		public  $selectForUpdate = false;
 		private $resetSelectForUpdate;
+		private $dsn             = "";
 
-		public function __construct(...$args) {
-			parent::__construct(...$args);
+		public function __construct($dsn, ...$args) {
+			parent::__construct($dsn, ...$args);
 
 			$this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+			$this->dsn = $dsn;
 
 			ModelRegistry::getInstance()->registerDatabase($this);
 		}
@@ -51,6 +53,10 @@
 			ModelRegistry::getInstance()->switchDatabase($this);
 
 			return $this;
+		}
+
+		public function getDSN() {
+			return $this->dsn;
 		}
 
 		public function beginTransaction($selectForUpdate = null) {
