@@ -17,7 +17,7 @@
 			foreach($this->databases as $database)
 				$class::registerDatabase($database);
 
-			$classes[] = $class;
+			$this->classes[] = $class;
 		}
 
 		public function registerDatabase(Database $database) {
