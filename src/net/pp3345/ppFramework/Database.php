@@ -19,10 +19,13 @@
 
 	namespace net\pp3345\ppFramework;
 
+	use net\pp3345\ppFramework\Exception\MissingDatabaseInstanceException;
 	use PDO;
+	use Serializable;
 
-	class Database extends PDO {
+	class Database extends PDO implements Serializable {
 		private static $default;
+		private static $instances = [];
 
 		public  $selectForUpdate = false;
 		private $resetSelectForUpdate;
@@ -33,6 +36,7 @@
 
 			$this->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 			$this->dsn = $dsn;
+			self::$instances[$dsn] = $this;
 
 			ModelRegistry::getInstance()->registerDatabase($this);
 		}
@@ -45,6 +49,13 @@
 				throw new \LogicException("Default database not set");
 
 			return self::$default;
+		}
+
+		public static function getByDSN($dsn) {
+			if(!isset(self::$instances[$dsn]))
+				throw new MissingDatabaseInstanceException($dsn);
+
+			return self::$instances[$dsn];
 		}
 
 		public function setDefault() {
@@ -118,5 +129,13 @@
 
 				return ($e->getCode() == "40001" || $e->getCode() == "HY000") && $restarts++ < $n;
 			};
+		}
+
+		public function serialize() {
+			return serialize($this->dsn);
+		}
+
+		public function unserialize($serialized) {
+			$this->dsn = unserialize($serialized);
 		}
 	}

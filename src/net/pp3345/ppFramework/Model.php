@@ -167,11 +167,11 @@
 		}
 
 		public function __sleep() {
-			return ["id"];
+			return ["id", "_database"];
 		}
 
 		public function __wakeup() {
-			self::__construct($this->id);
+			self::__construct($this->id, null, Database::getByDSN($this->_database->getDSN()));
 		}
 
 		public function __isset($name) {
