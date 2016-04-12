@@ -440,6 +440,8 @@
 				$stmt = self::$_deleteRelationStmts[$relationTable];
 
 			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
+
+			return (bool) $stmt->rowCount();
 		}
 
 		public function deleteOneWayRelation($relationTable, self $object) {
