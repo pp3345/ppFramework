@@ -35,6 +35,11 @@
 	use function \gettype;
 
 	trait Model {
+		use TransparentPropertyAccessors {
+			__get as __getTransparent;
+			__set as __setTransparent;
+		}
+
 		/**
 		 * @var \SplObjectStorage
 		 */
@@ -134,14 +139,18 @@
 				return $this->$name ? $this->$name = $class::get($this->$name, null, $this->_database) : null;
 			}
 
-			return $this->$name;
+			return $this->__getTransparent($name);
 		}
 
 		public function __set($name, $value) {
-			if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name]) && !($value instanceof self::$foreignKeys[$name]) && $value !== null)
-				throw new \UnexpectedValueException("Value must be instance of " . self::$foreignKeys[$name] . " or null, " . gettype($value) . " given");
+			if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name])) {
+				if($value !== null && !($value instanceof self::$foreignKeys[$name]))
+					throw new \UnexpectedValueException("Value must be instance of " . self::$foreignKeys[$name] . " or null, " . gettype($value) . " given");
 
-			$this->$name = $value;
+				$this->$name = $value;
+			}
+
+			$this->__setTransparent($name, $value);
 		}
 
 		public function __debugInfo() {
