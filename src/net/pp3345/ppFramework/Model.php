@@ -316,6 +316,20 @@
 			}
 		}
 
+		public function lock() {
+			try {
+				if(!$this->_database->selectForUpdate) {
+					$resetSelectForUpdate = true;
+					$this->_database->selectForUpdate = true;
+				}
+
+				$this->__construct($this->id, null, $this->_database);
+			} finally {
+				if(isset($resetSelectForUpdate))
+					$this->_database->selectForUpdate = false;
+			}
+		}
+
 		public function refetch() {
 			$this->__construct($this->id, null,$this->_database);
 		}
