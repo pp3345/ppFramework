@@ -118,6 +118,18 @@
 					return $this->executeInTransaction($call, $onError, $selectForUpdate);
 
 				throw $e;
+			} catch(\Exception $e) {
+				ModelRegistry::getInstance()->deactivateTransactionalCache();
+
+				$this->rollBack();
+
+				throw $e;
+			} catch(\Error $e) {
+				ModelRegistry::getInstance()->deactivateTransactionalCache();
+
+				$this->rollBack();
+
+				throw $e;
 			}
 
 			return $retval;
