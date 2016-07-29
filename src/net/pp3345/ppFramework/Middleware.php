@@ -40,10 +40,13 @@
 			    if(!isset(self::$middlewares[$call])) {
 				    // Try autoloading middleware
 				    class_exists(Application::getInstance()->getApplicationNamespace() . "\\Middleware\\" . $call);
-				    class_exists(__NAMESPACE__ . "\\Middleware\\" . $call);
 
-				    if(!isset(self::$middlewares[$call]))
-					    throw new UnknownMiddlewareException("Middleware '$call' is unknown");
+				    if(!isset(self::$middlewares[$call])) {
+					    class_exists(__NAMESPACE__ . "\\Middleware\\" . $call);
+
+					    if(!isset(self::$middlewares[$call]))
+						    throw new UnknownMiddlewareException("Middleware '$call' is unknown");
+				    }
 			    }
 
 			    $call = self::$middlewares[$call];
