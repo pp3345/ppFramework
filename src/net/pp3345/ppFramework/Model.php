@@ -296,7 +296,8 @@
 
 				if($this->_database == self::$_defaultDatabase)
 					self::$_deleteStmt = $stmt;
-			}
+			} else
+				self::$_deleteStmt->execute([$this->id]);
 
 			if(self::$_defaultDatabase == $this->_database)
 				unset(self::$_cache[$this->id]);
