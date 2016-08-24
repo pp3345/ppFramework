@@ -21,6 +21,7 @@
 
 	use net\pp3345\ppFramework\Exception\DataNotFoundException;
 	use net\pp3345\ppFramework\Exception\DifferentDatabasesException;
+	use net\pp3345\ppFramework\Exception\InvalidPropertyAccessException;
 	use net\pp3345\ppFramework\SQL\Select;
 
 	// This gives us some more performance since it allows resolving the functions compile-time
@@ -143,14 +144,19 @@
 		}
 
 		public function __set($name, $value) {
-			if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name])) {
-				if($value !== null && !($value instanceof self::$foreignKeys[$name]))
-					throw new \UnexpectedValueException("Value must be instance of " . self::$foreignKeys[$name] . " or null, " . gettype($value) . " given");
+			try {
+				$this->__setTransparent($name, $value);
+			} catch(InvalidPropertyAccessException $e) {
+				if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name])) {
+					if($value !== null && !($value instanceof self::$foreignKeys[$name]))
+						throw new \UnexpectedValueException("Value must be instance of " . self::$foreignKeys[$name] . " or null, " . gettype($value) . " given");
 
-				$this->$name = $value;
+					$this->$name = $value;
+					return;
+				}
+
+				throw $e;
 			}
-
-			$this->__setTransparent($name, $value);
 		}
 
 		public function __debugInfo() {
