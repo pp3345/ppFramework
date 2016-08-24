@@ -199,24 +199,14 @@
 		public function save() {
 			if(!self::$_insertStmt || $this->_database != self::$_defaultDatabase) {
 				$query = "INSERT INTO `" . self::TABLE . "` SET ";
+				$parameters = [];
 
-				if(isset(self::$databaseFields)) {
-					$parameters = [];
+				foreach($this as $field => $value) {
+					if($field[0] == "_")
+						continue;
 
-					foreach(self::$databaseFields as $field) {
-						$query .= "`{$field}` = ?,";
-						$parameters[] = is_object($this->$field) ? $this->$field->id : $this->$field;
-					}
-				} else {
-					$parameters = [];
-
-					foreach($this as $field => $value) {
-						if($field == "_database")
-							continue;
-
-						$query .= "`{$field}` = ?,";
-						$parameters[] = is_object($value) ? $value->id : $value; // Assume objects are models
-					}
+					$query .= "`{$field}` = ?,";
+					$parameters[] = is_object($value) ? $value->id : $value; // Assume objects are models
 				}
 
 				// Remove trailing comma
@@ -227,18 +217,15 @@
 
 				if($this->_database == self::$_defaultDatabase)
 					self::$_insertStmt = $stmt;
-			} else if(isset(self::$databaseFields)) {
-				$parameters = [];
-
-				foreach(self::$databaseFields as $field)
-					$parameters[] = is_object($this->$field) ? $this->$field->id : $this->$field;
-
-				self::$_insertStmt->execute($parameters);
 			} else {
 				$parameters = [];
 
-				foreach($this as $value)
+				foreach($this as $field => $value) {
+					if($field[0] == "_")
+						continue;
+
 					$parameters[] = is_object($value) ? $value->id : $value;
+				}
 
 				self::$_insertStmt->execute($parameters);
 			}
@@ -266,24 +253,14 @@
 			if(!self::$_updateStmt || $this->_database != self::$_defaultDatabase) {
 				// Build UPDATE query
 				$query = "UPDATE `" . self::TABLE . "` SET ";
+				$parameters = [];
 
-				if(isset(self::$databaseFields)) {
-					$parameters = [];
+				foreach($this as $field => $value) {
+					if($field[0] == "_")
+						continue;
 
-					foreach(self::$databaseFields as $field) {
-						$query .= "`{$field}` = ?,";
-						$parameters[] = is_object($this->$field) ? $this->$field->id : $this->$field;
-					}
-				} else {
-					$parameters = [];
-
-					foreach($this as $field => $value) {
-						if($field == "_database")
-							continue;
-
-						$query .= "`{$field}` = ?,";
-						$parameters[] = is_object($value) ? $value->id : $value;
-					}
+					$query .= "`{$field}` = ?,";
+					$parameters[] = is_object($value) ? $value->id : $value;
 				}
 
 				// Remove trailing comma
@@ -297,19 +274,15 @@
 
 				if($this->_database == self::$_defaultDatabase)
 					self::$_updateStmt = $stmt;
-			} else if(isset(self::$databaseFields)) {
-				$parameters = [];
-
-				foreach(self::$databaseFields as $field)
-					$parameters[] = is_object($this->$field) ? $this->$field->id : $this->$field;
-
-				$parameters[] = $this->id;
-				self::$_updateStmt->execute($parameters);
 			} else {
 				$parameters = [];
 
-				foreach($this as $value)
+				foreach($this as $field => $value) {
+					if($field[0] == "_")
+						continue;
+
 					$parameters[] = is_object($value) ? $value->id : $value;
+				}
 
 				$parameters[] = $this->id;
 				self::$_updateStmt->execute($parameters);
