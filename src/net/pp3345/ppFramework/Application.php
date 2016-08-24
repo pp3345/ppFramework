@@ -36,6 +36,8 @@
 		protected $namedRoutes = [];
 
 		protected function __construct() {
+			self::$_instance = $this;
+
 			$this->applicationNamespace = static::class;
 
 			set_error_handler(function ($severity, $string, $file, $line) {
