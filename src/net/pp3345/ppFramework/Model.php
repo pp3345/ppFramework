@@ -170,10 +170,13 @@
 			$retval = [];
 
 			foreach($this as $name => $value) {
-				$retval[$name] = $this->__get($name);
+				if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name])) {
+					$retval[$name] = $this->__get($name);
 
-				if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name]) && $retval[$name] instanceof self::$foreignKeys[$name])
-					$retval[$name] = $retval[$name]->__debugInfo();
+					if($retval[$name] instanceof self::$foreignKeys[$name])
+						$retval[$name] = $retval[$name]->__debugInfo();
+				} else
+					$retval[$name] = $this->$name;
 			}
 
 			unset($recursion[$this->id]);
