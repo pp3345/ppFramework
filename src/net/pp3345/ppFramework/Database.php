@@ -99,35 +99,35 @@
 
 		public function executeInTransaction(callable $call, callable $onError = null, $selectForUpdate = null) {
 			try {
-				$this->beginTransaction($selectForUpdate);
-
 				ModelRegistry::getInstance()->activateTransactionalCache();
+
+				$this->beginTransaction($selectForUpdate);
 
 				$retval = $call();
 
-				ModelRegistry::getInstance()->deactivateTransactionalCache();
-
 				if($this->inTransaction())
 					$this->commit();
-			} catch(\PDOException $e) {
-				ModelRegistry::getInstance()->deactivateTransactionalCache();
 
+				ModelRegistry::getInstance()->deactivateTransactionalCache();
+			} catch(\PDOException $e) {
 				$this->rollBack();
+
+				ModelRegistry::getInstance()->deactivateTransactionalCache();
 
 				if($onError && $onError($e))
 					return $this->executeInTransaction($call, $onError, $selectForUpdate);
 
 				throw $e;
 			} catch(\Exception $e) {
-				ModelRegistry::getInstance()->deactivateTransactionalCache();
-
 				$this->rollBack();
+
+				ModelRegistry::getInstance()->deactivateTransactionalCache();
 
 				throw $e;
 			} catch(\Error $e) {
-				ModelRegistry::getInstance()->deactivateTransactionalCache();
-
 				$this->rollBack();
+
+				ModelRegistry::getInstance()->deactivateTransactionalCache();
 
 				throw $e;
 			}
