@@ -640,8 +640,12 @@
 		public static function clearAllCaches() {
 			self::clearCache();
 
-			foreach(self::$_caches as $database => $cache)
-				self::$_caches[$database] = [];
+			self::$_caches->rewind();
+
+			while(self::$_caches->valid()) {
+				self::$_caches->setInfo([]);
+				self::$_caches->next();
+			}
 		}
 
 		public static function activateTransactionalCache() {
