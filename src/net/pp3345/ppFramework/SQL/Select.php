@@ -56,6 +56,7 @@
 		private $previous = null;
 
 		private $lastClause = 0;
+		private $forUpdate = false;
 
 		/**
 		 * @var PDOStatement
@@ -68,10 +69,12 @@
 		public function __construct(Database $database = null, Select $previous = null) {
 			$this->database = $database ?: Database::getDefault();
 			$this->previous = $previous;
+			$this->forUpdate = $this->database->selectForUpdate;
 		}
 
 		public function database(Database $database) {
 			$this->database = $database;
+			$this->forUpdate = $database->selectForUpdate;
 
 			return $this;
 		}
@@ -326,6 +329,12 @@
 			return $this;
 		}
 
+		public function forUpdate($forUpdate = true) {
+			$this->forUpdate = $forUpdate;
+
+			return $this;
+		}
+
 		public function back() {
 			if(!$this->previous)
 				throw new \LogicException("No parent query set");
@@ -389,7 +398,7 @@
 			if($this->offset)
 				$query .= "OFFSET {$this->offset} ";
 
-			if($this->database->selectForUpdate)
+			if($this->forUpdate)
 				$query .= " FOR UPDATE";
 
 			return $query;
