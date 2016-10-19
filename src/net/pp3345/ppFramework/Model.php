@@ -93,6 +93,9 @@
 		 */
 		private static $_deleteAllRelationsStmts = [];
 
+		private static $_foreignKeys = [];
+		private static $_relations = [];
+
 		/**
 		 * @var Database
 		 */
@@ -131,11 +134,11 @@
 		}
 
 		public function __get($name) {
-			if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name])) {
-				if($this->$name instanceof self::$foreignKeys[$name])
+			if(isset(self::$_foreignKeys[$name])) {
+				if($this->$name instanceof self::$_foreignKeys[$name])
 					return $this->$name;
 
-				$class = self::$foreignKeys[$name];
+				$class = self::$_foreignKeys[$name];
 
 				return $this->$name ? $this->$name = $class::get($this->$name, null, $this->_database) : null;
 			}
@@ -147,9 +150,9 @@
 			try {
 				$this->__setTransparent($name, $value);
 			} catch(InvalidPropertyAccessException $e) {
-				if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name])) {
-					if($value !== null && !($value instanceof self::$foreignKeys[$name]))
-						throw new \UnexpectedValueException("Value must be instance of " . self::$foreignKeys[$name] . " or null, " . gettype($value) . " given");
+				if(isset(self::$_foreignKeys[$name])) {
+					if($value !== null && !($value instanceof self::$_foreignKeys[$name]))
+						throw new \UnexpectedValueException("Value must be instance of " . self::$_foreignKeys[$name] . " or null, " . gettype($value) . " given");
 
 					$this->$name = $value;
 					return;
@@ -170,10 +173,10 @@
 			$retval = [];
 
 			foreach($this as $name => $value) {
-				if(isset(self::$foreignKeys) && isset(self::$foreignKeys[$name])) {
+				if(isset(self::$_foreignKeys[$name])) {
 					$retval[$name] = $this->__get($name);
 
-					if($retval[$name] instanceof self::$foreignKeys[$name])
+					if($retval[$name] instanceof self::$_foreignKeys[$name])
 						$retval[$name] = $retval[$name]->__debugInfo();
 				} else
 					$retval[$name] = $this->$name;
@@ -193,7 +196,7 @@
 		}
 
 		public function __isset($name) {
-			return isset($this->$name) || (isset(self::$foreignKeys) && isset(self::$foreignKeys[$name]));
+			return isset($this->$name) || (isset(self::$_foreignKeys[$name]));
 		}
 
 		public function save() {
@@ -327,7 +330,7 @@
 		}
 
 		public function loadForeignKeys() {
-			foreach(self::$foreignKeys as $property => $class)
+			foreach(self::$_foreignKeys as $property => $class)
 				$this->__get($property);
 		}
 
@@ -400,7 +403,11 @@
 		}
 
 		public static function getForeignKeys() {
-			return isset(self::$foreignKeys) ? self::$foreignKeys : [];
+			return self::$_foreignKeys;
+		}
+
+		public static function getRelations() {
+			return self::$_relations;
 		}
 
 		public function addRelation($relationTable, $object, $fields = []) {
@@ -410,11 +417,11 @@
 				throw new DifferentDatabasesException();
 
 			if($object instanceof $this) {
-				$relationField        = self::$relations[$relationTable][0];
-				$foreignRelationField = self::$relations[$relationTable][1];
+				$relationField        = self::$_relations[$relationTable][0];
+				$foreignRelationField = self::$_relations[$relationTable][1];
 			} else {
-				$relationField        = self::$relations[$relationTable];
-				$foreignRelationField = $object::$relations[$relationTable];
+				$relationField        = self::$_relations[$relationTable];
+				$foreignRelationField = $object::getRelations()[$relationTable];
 			}
 
 			$query = "INSERT INTO `{$relationTable}` SET `{$relationField}` = ?, `{$foreignRelationField}` = ?";
@@ -434,11 +441,11 @@
 
 			if(!isset(self::$_deleteRelationStmts[$relationTable]) || self::$_defaultDatabase != $this->_database) {
 				if($object instanceof $this) {
-					$relationField = self::$relations[$relationTable][0];
-					$foreignRelationField = self::$relations[$relationTable][1];
+					$relationField = self::$_relations[$relationTable][0];
+					$foreignRelationField = self::$_relations[$relationTable][1];
 					$stmt = $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
 				} else
-					$stmt = $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable] . "` = :id AND `" . $object::$relations[$relationTable] . "` = :fid");
+					$stmt = $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable] . "` = :id AND `" . $object::getRelations()[$relationTable] . "` = :fid");
 
 				if(self::$_defaultDatabase == $this->_database)
 					self::$_deleteRelationStmts[$relationTable] = $stmt;
@@ -455,7 +462,7 @@
 				throw new DifferentDatabasesException();
 
 			if(!isset(self::$_deleteOneWayRelationStmts[$relationTable]) || $this->_database != self::$_defaultDatabase) {
-				$stmt = $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = ? AND `" . self::$relations[$relationTable][1] . "` = ?");
+				$stmt = $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable][0] . "` = ? AND `" . self::$_relations[$relationTable][1] . "` = ?");
 
 				if($this->_database == self::$_defaultDatabase)
 					self::$_deleteOneWayRelationStmts[$relationTable] = $stmt;
@@ -473,11 +480,11 @@
 
 			if(!isset(self::$_hasRelationStmts[$relationTable]) || $this->_database != self::$_defaultDatabase) {
 				if($object instanceof $this) {
-					$relationField = self::$relations[$relationTable][0];
-					$foreignRelationField = self::$relations[$relationTable][1];
+					$relationField = self::$_relations[$relationTable][0];
+					$foreignRelationField = self::$_relations[$relationTable][1];
 					$stmt = $this->_database->prepare("SELECT 1 FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
 				} else
-					$stmt = $this->_database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable] . "` = :id AND `" . $object::$relations[$relationTable] . "` = :fid");
+					$stmt = $this->_database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable] . "` = :id AND `" . $object::getRelations()[$relationTable] . "` = :fid");
 
 				if($this->_database == self::$_defaultDatabase)
 					self::$_hasRelationStmts[$relationTable] = $stmt;
@@ -494,7 +501,7 @@
 				throw new DifferentDatabasesException();
 
 			if(!isset(self::$_hasOneWayRelationStmts[$relationTable]) || $this->_database != self::$_defaultDatabase) {
-				$stmt = $this->_database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = ? AND `" . self::$relations[$relationTable][1] . "` = ?");
+				$stmt = $this->_database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable][0] . "` = ? AND `" . self::$_relations[$relationTable][1] . "` = ?");
 
 				if($this->_database == self::$_defaultDatabase)
 					self::$_hasOneWayRelationStmts[$relationTable] = $stmt;
@@ -508,9 +515,9 @@
 
 		public function deleteAllRelations($relationTable) {
 			if(!isset(self::$_deleteAllRelationsStmts[$relationTable]) || $this->_database != self::$_defaultDatabase) {
-				$stmt = is_array(self::$relations[$relationTable])
-					? $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable][0] . "` = :id OR `" . self::$relations[$relationTable][1] . "` = :id")
-					: $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$relations[$relationTable] . "` = :id");
+				$stmt = is_array(self::$_relations[$relationTable])
+					? $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable][0] . "` = :id OR `" . self::$_relations[$relationTable][1] . "` = :id")
+					: $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable] . "` = :id");
 
 				if($this->_database == self::$_defaultDatabase)
 					self::$_deleteAllRelationsStmts[$relationTable] = $stmt;
@@ -529,8 +536,8 @@
 		 */
 		public static function getByRelation($relationTable, $object, &$additionalFields = []) {
 			if($self = get_class($object) == __CLASS__) {
-				$relationField        = self::$relations[$relationTable][0];
-				$foreignRelationField = self::$relations[$relationTable][1];
+				$relationField        = self::$_relations[$relationTable][0];
+				$foreignRelationField = self::$_relations[$relationTable][1];
 
 				$query = "SELECT `" . $relationField . "`, `" . $foreignRelationField . "`";
 
@@ -540,8 +547,8 @@
 
 				$stmt = $object->getDatabase()->prepare($query . " FROM `{$relationTable}` WHERE `{$foreignRelationField}` = :fid OR `{$relationField}` = :fid");
 			} else {
-				$relationField        = self::$relations[$relationTable];
-				$foreignRelationField = $object::$relations[$relationTable];
+				$relationField        = self::$_relations[$relationTable];
+				$foreignRelationField = $object::getRelations()[$relationTable];
 
 				$query = "SELECT `" . self::TABLE . "`.*";
 
@@ -591,12 +598,12 @@
 				$element = [];
 
 				foreach($dataset as $name => $value) {
-					if($name == self::$relations[$relationTable][0]) {
+					if($name == self::$_relations[$relationTable][0]) {
 						$element[0] = self::get($value, null, $database);
 						continue;
 					}
 
-					if($name == self::$relations[$relationTable][1]) {
+					if($name == self::$_relations[$relationTable][1]) {
 						$element[1] = self::get($value, null, $database);
 						continue;
 					}
@@ -624,6 +631,12 @@
 			self::$_defaultDatabase = Database::getDefault();
 
 			self::initializeSelectQueries();
+
+			if(defined("self::FOREIGN_KEYS"))
+				self::$_foreignKeys = self::FOREIGN_KEYS;
+
+			if(defined("self::RELATIONS"))
+				self::$_relations = self::RELATIONS;
 		}
 
 		public static function clearCache() {
