@@ -292,7 +292,7 @@
 
 				foreach(self::$__foreignKeys as $key => $class) {
 					$query .= "`{$key}` = ?,";
-					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : null) : null;
+					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : $this->__foreignKeyValues[$key]) : null;
 				}
 
 				// Remove trailing comma
@@ -317,7 +317,7 @@
 				}
 
 				foreach(self::$__foreignKeys as $key => $class)
-					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : null) : null;
+					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : $this->__foreignKeyValues[$key]) : null;
 
 				$parameters[] = $this->id;
 				self::$__updateStmt->execute($parameters);
