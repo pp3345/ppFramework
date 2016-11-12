@@ -174,8 +174,6 @@
 		}
 
 		public function __debugInfo() {
-			static $recursion = [];
-
 			$debugInfoRecursionHelper        = ModelRegistry::getInstance()->getDebugInfoRecursionHelper();
 			$debugInfoRecursionHelper[$this] = true;
 
