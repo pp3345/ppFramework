@@ -1,39 +1,39 @@
 <!doctype html>
 <html>
 <head>
-    <title>{% block title %}An error has occured.{% endblock %}</title>
-    <meta charset="utf-8">
-    <style>
-        body {
-            font-family: "Arial", sans-serif;
-        }
+	<title>{% block title %}An error has occured.{% endblock %}</title>
+	<meta charset="utf-8">
+	<style>
+		body {
+			font-family: "Arial", sans-serif;
+		}
 
-        h1 {
-            color: #ccc;
-            text-shadow: 1px 1px 5px #777;
-            font-size: 92pt;
-            margin: 0;
-        }
-    </style>
+		h1 {
+			color: #ccc;
+			text-shadow: 1px 1px 5px #777;
+			font-size: 92pt;
+			margin: 0;
+		}
+	</style>
 </head>
 <body>
 {% block content %}
 {% endblock %}
 {% if displayStack %}
-    <br/><br/>
-    <h3>Stack trace:</h3>
-    <pre>{{ exception.getTraceAsString() }}</pre>
-    {% macro previous(exception) %}
-        {% if exception.previous %}
-            <br/>
-            <h4>Previous exception:</h4>
-            {{ exception.previous.getMessage() }} in {{ exception.previous.getFile() }} on line {{ exception.previous.getLine() }}
-            <br/><br/>
-            <pre>{{ exception.previous.getTraceAsString() }}</pre>
-            {{ _self.previous(exception.previous) }}
-        {% endif %}
-    {% endmacro %}
-    {{ _self.previous(exception) }}
+	<br /><br />
+	<h3>Stack trace:</h3>
+	<pre>{{ exception.getTraceAsString() }}</pre>
+	{% macro previous(exception) %}
+		{% if exception.previous %}
+			<br />
+			<h4>Previous exception:</h4>
+			{{ exception.previous.getMessage() }} in {{ exception.previous.getFile() }} on line {{ exception.previous.getLine() }}
+			<br /><br />
+			<pre>{{ exception.previous.getTraceAsString() }}</pre>
+			{{ _self.previous(exception.previous) }}
+		{% endif %}
+	{% endmacro %}
+	{{ _self.previous(exception) }}
 {% endif %}
 </body>
 </html>

@@ -1,47 +1,48 @@
 <?php
 
-	/*
-	 * 	This file is part of ppFramework.
+	/**
+	 * Copyright (c) 2014 - 2016 Yussuf Khalil
 	 *
-	 *  ppFramework is free software: you can redistribute it and/or modify
-	 *  it under the terms of the GNU General Public License as published by
-	 *  the Free Software Foundation, either version 3 of the License, or
-	 *  (at your option) any later version.
+	 * This file is part of ppFramework.
 	 *
-
-	 *  ppFramework is distributed in the hope that it will be useful,
-	 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-	 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	 *  GNU General Public License for more details.
+	 * ppFramework is free software: you can redistribute it and/or modify
+	 * it under the terms of the GNU Lesser General Public License as published
+	 * by the Free Software Foundation, either version 3 of the License, or
+	 * (at your option) any later version.
 	 *
-	 *  You should have received a copy of the GNU General Public License
-	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
+	 * ppFramework is distributed in the hope that it will be useful,
+	 * but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	 * GNU Lesser General Public License for more details.
+	 *
+	 * You should have received a copy of the GNU Lesser General Public License
+	 * along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
-    namespace net\pp3345\ppFramework\CLI;
+	namespace net\pp3345\ppFramework\CLI;
 
-    use net\pp3345\ppFramework\Application;
-    use net\pp3345\ppFramework\Exception\NotFoundException;
-    use net\pp3345\ppFramework\Singleton;
+	use net\pp3345\ppFramework\Application;
+	use net\pp3345\ppFramework\Exception\NotFoundException;
+	use net\pp3345\ppFramework\Singleton;
 
-    class WebRoute {
-	    use Singleton;
+	class WebRoute {
+		use Singleton;
 
-	    public function WebRoute(Application $application, $path = "/", $method = "GET", $cookies = "") {
-		    foreach(explode(";", $cookies) as $cookie) {
-			    $cookie = explode("=", $cookie, 2);
-			    $_COOKIE[$cookie[0]] = isset($cookie[1]) ? $cookie[1] : "";
-		    }
+		public function WebRoute(Application $application, $path = "/", $method = "GET", $cookies = "") {
+			foreach(explode(";", $cookies) as $cookie) {
+				$cookie              = explode("=", $cookie, 2);
+				$_COOKIE[$cookie[0]] = isset($cookie[1]) ? $cookie[1] : "";
+			}
 
-		    try {
-			    $application->route($method, $path);
-		    } catch(NotFoundException $e) {
-			    $this->help();
-			    throw $e;
-		    }
-	    }
+			try {
+				$application->route($method, $path);
+			} catch(NotFoundException $e) {
+				$this->help();
+				throw $e;
+			}
+		}
 
-	    public function help() {
-		    echo 'Usage: WebRoute <path = "/"> <method = "GET"> <cookies>' . PHP_EOL;
-	    }
-    }
+		public function help() {
+			echo 'Usage: WebRoute <path = "/"> <method = "GET"> <cookies>' . PHP_EOL;
+		}
+	}

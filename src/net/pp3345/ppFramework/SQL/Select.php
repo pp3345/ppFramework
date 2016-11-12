@@ -1,21 +1,22 @@
 <?php
 
-	/*
-	 * 	This file is part of ppFramework.
+	/**
+	 * Copyright (c) 2014 - 2016 Yussuf Khalil
 	 *
-	 *  ppFramework is free software: you can redistribute it and/or modify
-	 *  it under the terms of the GNU General Public License as published by
-	 *  the Free Software Foundation, either version 3 of the License, or
-	 *  (at your option) any later version.
+	 * This file is part of ppFramework.
 	 *
-
-	 *  ppFramework is distributed in the hope that it will be useful,
-	 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-	 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	 *  GNU General Public License for more details.
+	 * ppFramework is free software: you can redistribute it and/or modify
+	 * it under the terms of the GNU Lesser General Public License as published
+	 * by the Free Software Foundation, either version 3 of the License, or
+	 * (at your option) any later version.
 	 *
-	 *  You should have received a copy of the GNU General Public License
-	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
+	 * ppFramework is distributed in the hope that it will be useful,
+	 * but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	 * GNU Lesser General Public License for more details.
+	 *
+	 * You should have received a copy of the GNU Lesser General Public License
+	 * along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
 	namespace net\pp3345\ppFramework\SQL;
@@ -29,7 +30,7 @@
 		 * @var Database
 		 */
 		private $database = null;
-		private $table = "";
+		private $table    = "";
 
 		/**
 		 * @var Model
@@ -38,14 +39,14 @@
 
 		private $distinct = false;
 
-		private $fields = [];
+		private $fields    = [];
 		private $rawFields = [];
 
-		private $joins = "";
-		private $where = "";
+		private $joins   = "";
+		private $where   = "";
 		private $orderBy = "";
 
-		private $limit = 0;
+		private $limit  = 0;
 		private $offset = 0;
 
 		private $parameters = [];
@@ -56,24 +57,24 @@
 		private $previous = null;
 
 		private $lastClause = 0;
-		private $forUpdate = false;
+		private $forUpdate  = false;
 
 		/**
 		 * @var PDOStatement
 		 */
 		private $stmt = null;
 
-		const CLAUSE_JOIN = 0b1;
+		const CLAUSE_JOIN  = 0b1;
 		const CLAUSE_WHERE = 0b10;
 
 		public function __construct(Database $database = null, Select $previous = null) {
-			$this->database = $database ?: Database::getDefault();
-			$this->previous = $previous;
+			$this->database  = $database ?: Database::getDefault();
+			$this->previous  = $previous;
 			$this->forUpdate = $this->database->selectForUpdate;
 		}
 
 		public function database(Database $database) {
-			$this->database = $database;
+			$this->database  = $database;
 			$this->forUpdate = $database->selectForUpdate;
 
 			return $this;

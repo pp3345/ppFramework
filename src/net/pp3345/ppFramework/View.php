@@ -1,20 +1,22 @@
 <?php
 
-	/*
-	 * 	This file is part of ppFramework.
+	/**
+	 * Copyright (c) 2014 - 2016 Yussuf Khalil
 	 *
-	 *  ppFramework is free software: you can redistribute it and/or modify
-	 *  it under the terms of the GNU General Public License as published by
-	 *  the Free Software Foundation, either version 3 of the License, or
-	 *  (at your option) any later version.
+	 * This file is part of ppFramework.
 	 *
-	 *  ppFramework is distributed in the hope that it will be useful,
-	 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-	 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	 *  GNU General Public License for more details.
+	 * ppFramework is free software: you can redistribute it and/or modify
+	 * it under the terms of the GNU Lesser General Public License as published
+	 * by the Free Software Foundation, either version 3 of the License, or
+	 * (at your option) any later version.
 	 *
-	 *  You should have received a copy of the GNU General Public License
-	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
+	 * ppFramework is distributed in the hope that it will be useful,
+	 * but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	 * GNU Lesser General Public License for more details.
+	 *
+	 * You should have received a copy of the GNU Lesser General Public License
+	 * along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
 	namespace net\pp3345\ppFramework;
@@ -29,7 +31,7 @@
 		 * @var Twig_Environment
 		 */
 		private static $environment;
-		private $context = [];
+		private        $context = [];
 		/**
 		 * @var BeforeRenderHook[]
 		 */
@@ -42,7 +44,7 @@
 		public static function getEnvironment() {
 			if(!self::$environment) {
 				$applicationReflector = new \ReflectionClass(Application::getInstance());
-				$loader = new \Twig_Loader_Filesystem();
+				$loader               = new \Twig_Loader_Filesystem();
 
 				self::$environment = new Twig_Environment($loader);
 

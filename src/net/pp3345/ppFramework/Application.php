@@ -1,20 +1,22 @@
 <?php
 
-	/*
-	 * 	This file is part of ppFramework.
+	/**
+	 * Copyright (c) 2014 - 2016 Yussuf Khalil
 	 *
-	 *  ppFramework is free software: you can redistribute it and/or modify
-	 *  it under the terms of the GNU General Public License as published by
-	 *  the Free Software Foundation, either version 3 of the License, or
-	 *  (at your option) any later version.
+	 * This file is part of ppFramework.
 	 *
-	 *  ppFramework is distributed in the hope that it will be useful,
-	 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
-	 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-	 *  GNU General Public License for more details.
+	 * ppFramework is free software: you can redistribute it and/or modify
+	 * it under the terms of the GNU Lesser General Public License as published
+	 * by the Free Software Foundation, either version 3 of the License, or
+	 * (at your option) any later version.
 	 *
-	 *  You should have received a copy of the GNU General Public License
-	 *  along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
+	 * ppFramework is distributed in the hope that it will be useful,
+	 * but WITHOUT ANY WARRANTY; without even the implied warranty of
+	 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	 * GNU Lesser General Public License for more details.
+	 *
+	 * You should have received a copy of the GNU Lesser General Public License
+	 * along with ppFramework.  If not, see <http://www.gnu.org/licenses/>.
 	 */
 
 	namespace net\pp3345\ppFramework;
@@ -31,9 +33,9 @@
 	abstract class Application {
 		use StaticSingleton;
 
-		private $applicationNamespace = "";
-		protected $routes = [];
-		protected $namedRoutes = [];
+		private   $applicationNamespace = "";
+		protected $routes               = [];
+		protected $namedRoutes          = [];
 
 		protected function __construct() {
 			self::$_instance = $this;
@@ -53,7 +55,7 @@
 		}
 
 		public function registerAutoload(callable $function) {
-			spl_autoload_register(function($class) use ($function) {
+			spl_autoload_register(function ($class) use ($function) {
 				$function($class);
 
 				if(class_exists($class, false)) {
@@ -61,14 +63,15 @@
 						ModelRegistry::getInstance()->registerClass($class);
 
 					try {
-						$classReflector = new \ReflectionClass($class);
+						$classReflector  = new \ReflectionClass($class);
 						$methodReflector = $classReflector->getMethod("__static");
 
 						if($methodReflector->getDeclaringClass()->getName() == $classReflector->getName()) {
 							$methodReflector->setAccessible(true);
 							$methodReflector->invoke(new \stdClass());
 						}
-					} catch(\ReflectionException $e) {}
+					} catch(\ReflectionException $e) {
+					}
 				}
 			});
 		}
@@ -109,7 +112,8 @@
 			}
 
 			if((!class_exists($classPath = __NAMESPACE__ . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance"))
-			&& (!class_exists($classPath = $this->applicationNamespace . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance")))
+			   && (!class_exists($classPath = $this->applicationNamespace . "\\CLI\\" . $argv[0]) || !is_callable($classPath . "::getInstance"))
+			)
 				throw new CLIComponentNotFoundException("Unknown CLI component '$argv[0]'");
 
 			$component = $classPath::getInstance();
