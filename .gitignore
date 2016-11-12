@@ -33,7 +33,7 @@ atlassian-ide-plugin.xml
 com_crashlytics_export_strings.xml
 
 src/vendor/
-src/net/pp3345/app/
+src/pp3345/app/
 public/
-src/net/pp3345/app.php
+src/pp3345/app.php
 composer.lock

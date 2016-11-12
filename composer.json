@@ -2,7 +2,7 @@
 	"name": "pp3345/ppframework",
 	"description": "ppFramework",
 	"minimum-stability": "stable",
-	"license": "GNU GPL v3",
+	"license": "GNU LGPL v3",
 	"authors": [
 		{
 			"name": "Yussuf Khalil",
@@ -17,6 +17,6 @@
 		"vendor-dir": "src/vendor"
 	},
 	"autoload": {
-		"psr-0": {"": "src/"}
+		"psr-4": {"pp3345\\": "src/pp3345"}
 	}
 }
