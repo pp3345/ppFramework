@@ -56,8 +56,20 @@
 			spl_autoload_register(function($class) use ($function) {
 				$function($class);
 
-				if(class_exists($class, false) && isset(class_uses($class)[Model::class]))
-					ModelRegistry::getInstance()->registerClass($class);
+				if(class_exists($class, false)) {
+					if(isset(class_uses($class)[Model::class]))
+						ModelRegistry::getInstance()->registerClass($class);
+
+					try {
+						$classReflector = new \ReflectionClass($class);
+						$methodReflector = $classReflector->getMethod("__static");
+
+						if($methodReflector->getDeclaringClass()->getName() == $classReflector->getName()) {
+							$methodReflector->setAccessible(true);
+							$methodReflector->invoke(new \stdClass());
+						}
+					} catch(\ReflectionException $e) {}
+				}
 			});
 		}
 
