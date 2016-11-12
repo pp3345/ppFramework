@@ -707,6 +707,7 @@
 			self::$__transactionalCacheActive = false;
 
 			self::$__cache = self::$__caches[self::$__defaultDatabase];
+			self::$__caches[self::$__defaultDatabase] = [];
 		}
 
 		public static function switchDatabase(Database $newDatabase) {
