@@ -100,6 +100,7 @@
 		 * @var Database
 		 */
 		private $_database = null;
+		private $_foreignKeyValues = [];
 		public $id = 0;
 
 		public function __construct($id = null, \stdClass $dataset = null, Database $database = null) {
@@ -118,8 +119,12 @@
 					if(!$stmt->execute([$id]) || !$stmt->rowCount())
 						throw new DataNotFoundException(__CLASS__, $id);
 
-					foreach($stmt->fetch(\PDO::FETCH_ASSOC) as $name => $value)
-						$this->$name = $value;
+					foreach($stmt->fetch(\PDO::FETCH_ASSOC) as $name => $value) {
+						if(isset(self::$_foreignKeys[$name]))
+							$this->_foreignKeyValues[$name] = $value;
+						else
+							$this->$name = $value;
+					}
 				}
 
 				if($this->_database == self::$_defaultDatabase)
@@ -135,12 +140,15 @@
 
 		public function __get($name) {
 			if(isset(self::$_foreignKeys[$name])) {
-				if($this->$name instanceof self::$_foreignKeys[$name])
-					return $this->$name;
+				if(isset($this->_foreignKeyValues[$name])) {
+					if(is_object($this->_foreignKeyValues[$name]))
+						return $this->_foreignKeyValues[$name];
 
-				$class = self::$_foreignKeys[$name];
+					$class = self::$_foreignKeys[$name];
 
-				return $this->$name ? $this->$name = $class::get($this->$name, null, $this->_database) : null;
+					return $this->_foreignKeyValues[$name] = $class::get($this->_foreignKeyValues[$name], null, $this->_database);
+				} else
+					return null;
 			}
 
 			return $this->__getTransparent($name);
@@ -154,7 +162,7 @@
 					if($value !== null && !($value instanceof self::$_foreignKeys[$name]))
 						throw new \UnexpectedValueException("Value must be instance of " . self::$_foreignKeys[$name] . " or null, " . gettype($value) . " given");
 
-					$this->$name = $value;
+					$this->_foreignKeyValues[$name] = $value;
 					return;
 				}
 
@@ -196,7 +204,7 @@
 		}
 
 		public function __isset($name) {
-			return isset($this->$name) || (isset(self::$_foreignKeys[$name]));
+			return isset($this->$name) || (isset($this->_foreignKeyValues[$name]));
 		}
 
 		public function save() {
@@ -210,6 +218,11 @@
 
 					$query .= "`{$field}` = ?,";
 					$parameters[] = is_object($value) ? $value->id : $value; // Assume objects are models
+				}
+
+				foreach(self::$_foreignKeys as $key => $class) {
+					$query .= "`{$key}` = ?,";
+					$parameters[] = isset($this->_foreignKeyValues[$key]) ? (is_object($this->_foreignKeyValues[$key]) ? $this->_foreignKeyValues[$key]->id : null) : null;
 				}
 
 				// Remove trailing comma
@@ -229,6 +242,9 @@
 
 					$parameters[] = is_object($value) ? $value->id : $value;
 				}
+
+				foreach(self::$_foreignKeys as $key => $class)
+					$parameters[] = isset($this->_foreignKeyValues[$key]) ? (is_object($this->_foreignKeyValues[$key]) ? $this->_foreignKeyValues[$key]->id : null) : null;
 
 				self::$_insertStmt->execute($parameters);
 			}
@@ -266,6 +282,11 @@
 					$parameters[] = is_object($value) ? $value->id : $value;
 				}
 
+				foreach(self::$_foreignKeys as $key => $class) {
+					$query .= "`{$key}` = ?,";
+					$parameters[] = isset($this->_foreignKeyValues[$key]) ? (is_object($this->_foreignKeyValues[$key]) ? $this->_foreignKeyValues[$key]->id : null) : null;
+				}
+
 				// Remove trailing comma
 				$query[strlen($query) - 1] = " ";
 
@@ -286,6 +307,9 @@
 
 					$parameters[] = is_object($value) ? $value->id : $value;
 				}
+
+				foreach(self::$_foreignKeys as $key => $class)
+					$parameters[] = isset($this->_foreignKeyValues[$key]) ? (is_object($this->_foreignKeyValues[$key]) ? $this->_foreignKeyValues[$key]->id : null) : null;
 
 				$parameters[] = $this->id;
 				self::$_updateStmt->execute($parameters);
