@@ -25,15 +25,15 @@
 	use net\pp3345\ppFramework\SQL\Select;
 
 	// This gives us some more performance since it allows resolving the functions compile-time
-	use function \is_object;
-	use function \is_array;
-	use function \strlen;
-	use function \count;
-	use function \implode;
 	use function \array_fill;
 	use function \array_merge;
+	use function \count;
 	use function \get_class;
 	use function \gettype;
+	use function \implode;
+	use function \is_array;
+	use function \is_object;
+	use function \strlen;
 
 	trait Model {
 		use TransparentPropertyAccessors {
@@ -44,109 +44,109 @@
 		/**
 		 * @var \SplObjectStorage
 		 */
-		private static $_caches = null;
-		private static $_cache = [];
-		private static $_transactionalCacheActive = false;
+		private static $__caches                   = null;
+		private static $__cache                    = [];
+		private static $__transactionalCacheActive = false;
 
 		/**
 		 * @var Database
 		 */
-		private static $_defaultDatabase = null;
+		private static $__defaultDatabase = null;
 		/**
-		 * @var $_selectForUpdateStmt \PDOStatement
+		 * @var $__selectForUpdateStmt \PDOStatement
 		 */
-		private static $_selectForUpdateStmt = null;
+		private static $__selectForUpdateStmt = null;
 		/**
-		 * @var $_selectStmt \PDOStatement
+		 * @var $__selectStmt \PDOStatement
 		 */
-		private static $_selectStmt = null;
+		private static $__selectStmt = null;
+		/**
+		 * @var $__insertStmt \PDOStatement
+		 */
+		private static $__insertStmt = null;
 		/**
 		 * @var $_insertStmt \PDOStatement
 		 */
-		private static $_insertStmt = null;
+		private static $__updateStmt = null;
 		/**
-		 * @var $_insertStmt \PDOStatement
+		 * @var $__deleteStmt \PDOStatement
 		 */
-		private static $_updateStmt = null;
+		private static $__deleteStmt = null;
 		/**
-		 * @var $_deleteStmt \PDOStatement
+		 * @var $__deleteRelationStmts \PDOStatement[]
 		 */
-		private static $_deleteStmt = null;
+		private static $__deleteRelationStmts = [];
 		/**
-		 * @var $_deleteRelationStmts \PDOStatement[]
+		 * @var $__deleteOneWayRelationStmts \PDOStatement[]
 		 */
-		private static $_deleteRelationStmts = [];
+		private static $__deleteOneWayRelationStmts = [];
 		/**
-		 * @var $_deleteOneWayRelationStmts \PDOStatement[]
+		 * @var $__hasRelationStmts \PDOStatement[]
 		 */
-		private static $_deleteOneWayRelationStmts = [];
+		private static $__hasRelationStmts = [];
 		/**
-		 * @var $_hasRelationStmts \PDOStatement[]
+		 * @var $__hasOneWayRelationStmts \PDOStatement[]
 		 */
-		private static $_hasRelationStmts = [];
+		private static $__hasOneWayRelationStmts = [];
 		/**
-		 * @var $_hasOneWayRelationStmts \PDOStatement[]
+		 * @var $__deleteAllRelationsStmts \PDOStatement[]
 		 */
-		private static $_hasOneWayRelationStmts = [];
-		/**
-		 * @var $_deleteAllRelationsStmts \PDOStatement[]
-		 */
-		private static $_deleteAllRelationsStmts = [];
+		private static $__deleteAllRelationsStmts = [];
 
-		private static $_foreignKeys = [];
-		private static $_relations = [];
+		private static $__foreignKeys = [];
+		private static $__relations   = [];
 
 		/**
 		 * @var Database
 		 */
-		private $_database = null;
-		private $_foreignKeyValues = [];
-		public $id = 0;
+		private $__database         = null;
+		private $__foreignKeyValues = [];
+		public  $id                 = 0;
 
 		public function __construct($id = null, \stdClass $dataset = null, Database $database = null) {
-			$this->_database = $database ?: self::$_defaultDatabase;
+			$this->__database = $database ?: self::$__defaultDatabase;
 
 			if($id !== null) {
 				if($dataset) {
 					foreach($dataset as $name => $value)
 						$this->$name = $value;
 				} else {
-					if($this->_database->selectForUpdate)
-						$stmt = $this->_database == self::$_defaultDatabase ? self::$_selectForUpdateStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
+					if($this->__database->selectForUpdate)
+						$stmt = $this->__database == self::$__defaultDatabase ? self::$__selectForUpdateStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
 					else
-						$stmt = $this->_database == self::$_defaultDatabase ? self::$_selectStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
+						$stmt = $this->__database == self::$__defaultDatabase ? self::$__selectStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
 
 					if(!$stmt->execute([$id]) || !$stmt->rowCount())
 						throw new DataNotFoundException(__CLASS__, $id);
 
 					foreach($stmt->fetch(\PDO::FETCH_ASSOC) as $name => $value) {
-						if(isset(self::$_foreignKeys[$name]))
-							$this->_foreignKeyValues[$name] = $value;
+						if(isset(self::$__foreignKeys[$name]))
+							$this->__foreignKeyValues[$name] = $value;
 						else
 							$this->$name = $value;
 					}
 				}
 
-				if($this->_database == self::$_defaultDatabase)
-					self::$_cache[$this->id] = $this;
+				if($this->__database == self::$__defaultDatabase)
+					self::$__cache[$this->id] = $this;
 				else {
 					// We can't modify the array inside the ObjectStorage directly
-					$cache = self::$_caches[$database];
-					$cache[$this->id] = $this;
-					self::$_caches[$database] = $cache;
+					$cache                     = self::$__caches[$database];
+					$cache[$this->id]          = $this;
+					self::$__caches[$database] = $cache;
 				}
 			}
 		}
 
 		public function __get($name) {
-			if(isset(self::$_foreignKeys[$name])) {
-				if(isset($this->_foreignKeyValues[$name])) {
-					if(is_object($this->_foreignKeyValues[$name]))
-						return $this->_foreignKeyValues[$name];
+			if(isset(self::$__foreignKeys[$name])) {
+				if(isset($this->__foreignKeyValues[$name])) {
+					if(is_object($this->__foreignKeyValues[$name]))
+						return $this->__foreignKeyValues[$name];
 
-					$class = self::$_foreignKeys[$name];
+					$class = self::$__foreignKeys[$name];
 
-					return $this->_foreignKeyValues[$name] = $class::get($this->_foreignKeyValues[$name], null, $this->_database);
+					return $this->__foreignKeyValues[$name] = $class::get($this->__foreignKeyValues[$name], null, $this->__database);
 				} else
 					return null;
 			}
@@ -158,11 +158,12 @@
 			try {
 				$this->__setTransparent($name, $value);
 			} catch(InvalidPropertyAccessException $e) {
-				if(isset(self::$_foreignKeys[$name])) {
-					if($value !== null && !($value instanceof self::$_foreignKeys[$name]))
-						throw new \UnexpectedValueException("Value must be instance of " . self::$_foreignKeys[$name] . " or null, " . gettype($value) . " given");
+				if(isset(self::$__foreignKeys[$name])) {
+					if($value !== null && !($value instanceof self::$__foreignKeys[$name]))
+						throw new \UnexpectedValueException("Value must be instance of " . self::$__foreignKeys[$name] . " or null, " . gettype($value) . " given");
 
-					$this->_foreignKeyValues[$name] = $value;
+					$this->__foreignKeyValues[$name] = $value;
+
 					return;
 				}
 
@@ -181,10 +182,10 @@
 			$retval = [];
 
 			foreach($this as $name => $value) {
-				if(isset(self::$_foreignKeys[$name])) {
+				if(isset(self::$__foreignKeys[$name])) {
 					$retval[$name] = $this->__get($name);
 
-					if($retval[$name] instanceof self::$_foreignKeys[$name])
+					if($retval[$name] instanceof self::$__foreignKeys[$name])
 						$retval[$name] = $retval[$name]->__debugInfo();
 				} else
 					$retval[$name] = $this->$name;
@@ -200,16 +201,16 @@
 		}
 
 		public function __wakeup() {
-			self::__construct($this->id, null, Database::getByDSN($this->_database->getDSN()));
+			self::__construct($this->id, null, Database::getByDSN($this->__database->getDSN()));
 		}
 
 		public function __isset($name) {
-			return isset($this->$name) || (isset($this->_foreignKeyValues[$name]));
+			return isset($this->$name) || (isset($this->__foreignKeyValues[$name]));
 		}
 
 		public function save() {
-			if(!self::$_insertStmt || $this->_database != self::$_defaultDatabase) {
-				$query = "INSERT INTO `" . self::TABLE . "` SET ";
+			if(!self::$__insertStmt || $this->__database != self::$__defaultDatabase) {
+				$query      = "INSERT INTO `" . self::TABLE . "` SET ";
 				$parameters = [];
 
 				foreach($this as $field => $value) {
@@ -220,19 +221,19 @@
 					$parameters[] = is_object($value) ? $value->id : $value; // Assume objects are models
 				}
 
-				foreach(self::$_foreignKeys as $key => $class) {
+				foreach(self::$__foreignKeys as $key => $class) {
 					$query .= "`{$key}` = ?,";
-					$parameters[] = isset($this->_foreignKeyValues[$key]) ? (is_object($this->_foreignKeyValues[$key]) ? $this->_foreignKeyValues[$key]->id : null) : null;
+					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : null) : null;
 				}
 
 				// Remove trailing comma
 				$query[strlen($query) - 1] = "";
 
-				$stmt = $this->_database->prepare($query);
+				$stmt = $this->__database->prepare($query);
 				$stmt->execute($parameters);
 
-				if($this->_database == self::$_defaultDatabase)
-					self::$_insertStmt = $stmt;
+				if($this->__database == self::$__defaultDatabase)
+					self::$__insertStmt = $stmt;
 			} else {
 				$parameters = [];
 
@@ -243,22 +244,22 @@
 					$parameters[] = is_object($value) ? $value->id : $value;
 				}
 
-				foreach(self::$_foreignKeys as $key => $class)
-					$parameters[] = isset($this->_foreignKeyValues[$key]) ? (is_object($this->_foreignKeyValues[$key]) ? $this->_foreignKeyValues[$key]->id : null) : null;
+				foreach(self::$__foreignKeys as $key => $class)
+					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : null) : null;
 
-				self::$_insertStmt->execute($parameters);
+				self::$__insertStmt->execute($parameters);
 			}
 
 			// ID might have been set explicitly (no AUTO_INCREMENT)
 			if(!$this->id)
-				$this->id = $this->_database->lastInsertId();
+				$this->id = $this->__database->lastInsertId();
 
-			if($this->_database == self::$_defaultDatabase)
-				self::$_cache[$this->id] = $this;
+			if($this->__database == self::$__defaultDatabase)
+				self::$__cache[$this->id] = $this;
 			else {
-				$cache = self::$_caches[$this->_database];
-				$cache[$this->id] = $this;
-				self::$_caches[$this->_database] = $cache;
+				$cache                             = self::$__caches[$this->__database];
+				$cache[$this->id]                  = $this;
+				self::$__caches[$this->__database] = $cache;
 			}
 		}
 
@@ -269,9 +270,9 @@
 				return;
 			}
 
-			if(!self::$_updateStmt || $this->_database != self::$_defaultDatabase) {
+			if(!self::$__updateStmt || $this->__database != self::$__defaultDatabase) {
 				// Build UPDATE query
-				$query = "UPDATE `" . self::TABLE . "` SET ";
+				$query      = "UPDATE `" . self::TABLE . "` SET ";
 				$parameters = [];
 
 				foreach($this as $field => $value) {
@@ -282,9 +283,9 @@
 					$parameters[] = is_object($value) ? $value->id : $value;
 				}
 
-				foreach(self::$_foreignKeys as $key => $class) {
+				foreach(self::$__foreignKeys as $key => $class) {
 					$query .= "`{$key}` = ?,";
-					$parameters[] = isset($this->_foreignKeyValues[$key]) ? (is_object($this->_foreignKeyValues[$key]) ? $this->_foreignKeyValues[$key]->id : null) : null;
+					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : null) : null;
 				}
 
 				// Remove trailing comma
@@ -293,11 +294,11 @@
 				$query .= "WHERE `id` = ?";
 				$parameters[] = $this->id;
 
-				$stmt = $this->_database->prepare($query);
+				$stmt = $this->__database->prepare($query);
 				$stmt->execute($parameters);
 
-				if($this->_database == self::$_defaultDatabase)
-					self::$_updateStmt = $stmt;
+				if($this->__database == self::$__defaultDatabase)
+					self::$__updateStmt = $stmt;
 			} else {
 				$parameters = [];
 
@@ -308,69 +309,70 @@
 					$parameters[] = is_object($value) ? $value->id : $value;
 				}
 
-				foreach(self::$_foreignKeys as $key => $class)
-					$parameters[] = isset($this->_foreignKeyValues[$key]) ? (is_object($this->_foreignKeyValues[$key]) ? $this->_foreignKeyValues[$key]->id : null) : null;
+				foreach(self::$__foreignKeys as $key => $class)
+					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : null) : null;
 
 				$parameters[] = $this->id;
-				self::$_updateStmt->execute($parameters);
+				self::$__updateStmt->execute($parameters);
 			}
 		}
 
 		public function delete() {
-			if(!self::$_deleteStmt || $this->_database != self::$_defaultDatabase) {
-				$stmt = $this->_database->prepare("DELETE FROM `" . self::TABLE . "` WHERE `id` = ?");
+			if(!self::$__deleteStmt || $this->__database != self::$__defaultDatabase) {
+				$stmt = $this->__database->prepare("DELETE FROM `" . self::TABLE . "` WHERE `id` = ?");
 				$stmt->execute([$this->id]);
 
-				if($this->_database == self::$_defaultDatabase)
-					self::$_deleteStmt = $stmt;
+				if($this->__database == self::$__defaultDatabase)
+					self::$__deleteStmt = $stmt;
 			} else
-				self::$_deleteStmt->execute([$this->id]);
+				self::$__deleteStmt->execute([$this->id]);
 
-			if(self::$_defaultDatabase == $this->_database)
-				unset(self::$_cache[$this->id]);
+			if(self::$__defaultDatabase == $this->__database)
+				unset(self::$__cache[$this->id]);
 			else {
-				$cache = self::$_caches[$this->_database];
+				$cache = self::$__caches[$this->__database];
 				unset($cache[$this->id]);
-				self::$_caches[$this->_database] = $cache;
+				self::$__caches[$this->__database] = $cache;
 			}
 		}
 
 		public function lock() {
 			try {
-				if(!$this->_database->selectForUpdate) {
-					$resetSelectForUpdate = true;
-					$this->_database->selectForUpdate = true;
+				if(!$this->__database->selectForUpdate) {
+					$resetSelectForUpdate              = true;
+					$this->__database->selectForUpdate = true;
 				}
 
-				$this->__construct($this->id, null, $this->_database);
+				$this->__construct($this->id, null, $this->__database);
 			} finally {
 				if(isset($resetSelectForUpdate))
-					$this->_database->selectForUpdate = false;
+					$this->__database->selectForUpdate = false;
 			}
 		}
 
 		public function refetch() {
-			$this->__construct($this->id, null,$this->_database);
+			$this->__construct($this->id, null, $this->__database);
 		}
 
 		public function loadForeignKeys() {
-			foreach(self::$_foreignKeys as $property => $class)
+			foreach(self::$__foreignKeys as $property => $class)
 				$this->__get($property);
 		}
 
 		/**
 		 * @param           $id
 		 * @param \stdClass $dataset
-		 * @param Database $database
+		 * @param Database  $database
+		 *
 		 * @return $this
 		 */
 		public static function get($id, \stdClass $dataset = null, Database $database = null) {
-			if($database && $database != self::$_defaultDatabase)
-				return isset(self::$_caches[$database][$id]) ? self::$_caches[$database][$id] : new static($id, $dataset, $database);
-			else if(self::$_transactionalCacheActive && isset(self::$_caches[self::$_defaultDatabase][$id]))
-				return self::$_caches[self::$_defaultDatabase][$id];
+			if($database && $database != self::$__defaultDatabase)
+				return isset(self::$__caches[$database][$id]) ? self::$__caches[$database][$id] : new static($id, $dataset, $database);
+			else if(self::$__transactionalCacheActive && isset(self::$__caches[self::$__defaultDatabase][$id]))
+				return self::$__caches[self::$__defaultDatabase][$id];
 
-			return isset(self::$_cache[$id]) ? self::$_cache[$id] : new static($id, $dataset);
+			return isset(self::$__cache[$id]) ? self::$__cache[$id] : new static($id, $dataset);
 		}
 
 		public static function getBulk(array $ids, Database $database = null) {
@@ -380,11 +382,11 @@
 				return [];
 
 			if(!$database)
-				$database = self::$_defaultDatabase;
+				$database = self::$__defaultDatabase;
 
 			$stmt = $database->prepare(isset($stmts[count($ids)])
-				                                         ? $stmts[count($ids)]
-				                                         : ($stmts[count($ids)] = "SELECT * FROM `" . self::TABLE . "` WHERE `id` IN(" . implode(",", array_fill(0, count($ids), "?")) . ")"));
+				                           ? $stmts[count($ids)]
+				                           : ($stmts[count($ids)] = "SELECT * FROM `" . self::TABLE . "` WHERE `id` IN(" . implode(",", array_fill(0, count($ids), "?")) . ")"));
 			$stmt->execute($ids);
 
 			$retval = [];
@@ -402,12 +404,12 @@
 				return [];
 
 			if(!$database)
-				$database = self::$_defaultDatabase;
+				$database = self::$__defaultDatabase;
 
 			// http://stackoverflow.com/questions/1631723/maintaining-order-in-mysql-in-query
 			$stmt = $database->prepare(isset($stmts[count($ids)])
-				                                         ? $stmts[count($ids)]
-				                                         : ($stmts[count($ids)] = "SELECT * FROM `" . self::TABLE . "` WHERE `id` IN(" . ($filled = implode(",", array_fill(0, count($ids), "?"))) . ") ORDER BY FIELD(`id`," . $filled . ")"));
+				                           ? $stmts[count($ids)]
+				                           : ($stmts[count($ids)] = "SELECT * FROM `" . self::TABLE . "` WHERE `id` IN(" . ($filled = implode(",", array_fill(0, count($ids), "?"))) . ") ORDER BY FIELD(`id`," . $filled . ")"));
 			$stmt->execute(array_merge($ids, $ids));
 
 			$retval = [];
@@ -420,31 +422,32 @@
 
 		/**
 		 * @param Database $database
+		 *
 		 * @return Select
 		 */
 		public static function lookup(Database $database = null) {
-			return (new Select())->model(static::class)->database($database ?: self::$_defaultDatabase);
+			return (new Select())->model(static::class)->database($database ?: self::$__defaultDatabase);
 		}
 
 		public static function getForeignKeys() {
-			return self::$_foreignKeys;
+			return self::$__foreignKeys;
 		}
 
 		public static function getRelations() {
-			return self::$_relations;
+			return self::$__relations;
 		}
 
 		public function addRelation($relationTable, $object, $fields = []) {
 			$parameters = [$this->id, $object->id];
 
-			if($object->getDatabase() != $this->_database)
+			if($object->getDatabase() != $this->__database)
 				throw new DifferentDatabasesException();
 
 			if($object instanceof $this) {
-				$relationField        = self::$_relations[$relationTable][0];
-				$foreignRelationField = self::$_relations[$relationTable][1];
+				$relationField        = self::$__relations[$relationTable][0];
+				$foreignRelationField = self::$__relations[$relationTable][1];
 			} else {
-				$relationField        = self::$_relations[$relationTable];
+				$relationField        = self::$__relations[$relationTable];
 				$foreignRelationField = $object::getRelations()[$relationTable];
 			}
 
@@ -455,26 +458,26 @@
 				$parameters[] = $value;
 			}
 
-			$stmt = $this->_database->prepare($query);
+			$stmt = $this->__database->prepare($query);
 			$stmt->execute($parameters);
 		}
 
 		public function deleteRelation($relationTable, $object) {
-			if($object->getDatabase() != $this->_database)
+			if($object->getDatabase() != $this->__database)
 				throw new DifferentDatabasesException();
 
-			if(!isset(self::$_deleteRelationStmts[$relationTable]) || self::$_defaultDatabase != $this->_database) {
+			if(!isset(self::$__deleteRelationStmts[$relationTable]) || self::$__defaultDatabase != $this->__database) {
 				if($object instanceof $this) {
-					$relationField = self::$_relations[$relationTable][0];
-					$foreignRelationField = self::$_relations[$relationTable][1];
-					$stmt = $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
+					$relationField        = self::$__relations[$relationTable][0];
+					$foreignRelationField = self::$__relations[$relationTable][1];
+					$stmt                 = $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
 				} else
-					$stmt = $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable] . "` = :id AND `" . $object::getRelations()[$relationTable] . "` = :fid");
+					$stmt = $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = :id AND `" . $object::getRelations()[$relationTable] . "` = :fid");
 
-				if(self::$_defaultDatabase == $this->_database)
-					self::$_deleteRelationStmts[$relationTable] = $stmt;
+				if(self::$__defaultDatabase == $this->__database)
+					self::$__deleteRelationStmts[$relationTable] = $stmt;
 			} else
-				$stmt = self::$_deleteRelationStmts[$relationTable];
+				$stmt = self::$__deleteRelationStmts[$relationTable];
 
 			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
 
@@ -482,16 +485,16 @@
 		}
 
 		public function deleteOneWayRelation($relationTable, self $object) {
-			if($object->getDatabase() != $this->_database)
+			if($object->getDatabase() != $this->__database)
 				throw new DifferentDatabasesException();
 
-			if(!isset(self::$_deleteOneWayRelationStmts[$relationTable]) || $this->_database != self::$_defaultDatabase) {
-				$stmt = $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable][0] . "` = ? AND `" . self::$_relations[$relationTable][1] . "` = ?");
+			if(!isset(self::$__deleteOneWayRelationStmts[$relationTable]) || $this->__database != self::$__defaultDatabase) {
+				$stmt = $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable][0] . "` = ? AND `" . self::$__relations[$relationTable][1] . "` = ?");
 
-				if($this->_database == self::$_defaultDatabase)
-					self::$_deleteOneWayRelationStmts[$relationTable] = $stmt;
+				if($this->__database == self::$__defaultDatabase)
+					self::$__deleteOneWayRelationStmts[$relationTable] = $stmt;
 			} else
-				$stmt = self::$_deleteOneWayRelationStmts[$relationTable];
+				$stmt = self::$__deleteOneWayRelationStmts[$relationTable];
 
 			$stmt->execute([$this->id, $object->id]);
 
@@ -499,21 +502,21 @@
 		}
 
 		public function hasRelation($relationTable, $object) {
-			if($object->getDatabase() != $this->_database)
+			if($object->getDatabase() != $this->__database)
 				throw new DifferentDatabasesException();
 
-			if(!isset(self::$_hasRelationStmts[$relationTable]) || $this->_database != self::$_defaultDatabase) {
+			if(!isset(self::$__hasRelationStmts[$relationTable]) || $this->__database != self::$__defaultDatabase) {
 				if($object instanceof $this) {
-					$relationField = self::$_relations[$relationTable][0];
-					$foreignRelationField = self::$_relations[$relationTable][1];
-					$stmt = $this->_database->prepare("SELECT 1 FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
+					$relationField        = self::$__relations[$relationTable][0];
+					$foreignRelationField = self::$__relations[$relationTable][1];
+					$stmt                 = $this->__database->prepare("SELECT 1 FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
 				} else
-					$stmt = $this->_database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable] . "` = :id AND `" . $object::getRelations()[$relationTable] . "` = :fid");
+					$stmt = $this->__database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = :id AND `" . $object::getRelations()[$relationTable] . "` = :fid");
 
-				if($this->_database == self::$_defaultDatabase)
-					self::$_hasRelationStmts[$relationTable] = $stmt;
+				if($this->__database == self::$__defaultDatabase)
+					self::$__hasRelationStmts[$relationTable] = $stmt;
 			} else
-				$stmt = self::$_hasRelationStmts[$relationTable];
+				$stmt = self::$__hasRelationStmts[$relationTable];
 
 			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
 
@@ -521,16 +524,16 @@
 		}
 
 		public function hasOneWayRelation($relationTable, self $object) {
-			if($object->getDatabase() != $this->_database)
+			if($object->getDatabase() != $this->__database)
 				throw new DifferentDatabasesException();
 
-			if(!isset(self::$_hasOneWayRelationStmts[$relationTable]) || $this->_database != self::$_defaultDatabase) {
-				$stmt = $this->_database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable][0] . "` = ? AND `" . self::$_relations[$relationTable][1] . "` = ?");
+			if(!isset(self::$__hasOneWayRelationStmts[$relationTable]) || $this->__database != self::$__defaultDatabase) {
+				$stmt = $this->__database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable][0] . "` = ? AND `" . self::$__relations[$relationTable][1] . "` = ?");
 
-				if($this->_database == self::$_defaultDatabase)
-					self::$_hasOneWayRelationStmts[$relationTable] = $stmt;
+				if($this->__database == self::$__defaultDatabase)
+					self::$__hasOneWayRelationStmts[$relationTable] = $stmt;
 			} else
-				$stmt = self::$_hasOneWayRelationStmts[$relationTable];
+				$stmt = self::$__hasOneWayRelationStmts[$relationTable];
 
 			$stmt->execute([$this->id, $object->id]);
 
@@ -538,30 +541,31 @@
 		}
 
 		public function deleteAllRelations($relationTable) {
-			if(!isset(self::$_deleteAllRelationsStmts[$relationTable]) || $this->_database != self::$_defaultDatabase) {
-				$stmt = is_array(self::$_relations[$relationTable])
-					? $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable][0] . "` = :id OR `" . self::$_relations[$relationTable][1] . "` = :id")
-					: $this->_database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$_relations[$relationTable] . "` = :id");
+			if(!isset(self::$__deleteAllRelationsStmts[$relationTable]) || $this->__database != self::$__defaultDatabase) {
+				$stmt = is_array(self::$__relations[$relationTable])
+					? $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable][0] . "` = :id OR `" . self::$__relations[$relationTable][1] . "` = :id")
+					: $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = :id");
 
-				if($this->_database == self::$_defaultDatabase)
-					self::$_deleteAllRelationsStmts[$relationTable] = $stmt;
+				if($this->__database == self::$__defaultDatabase)
+					self::$__deleteAllRelationsStmts[$relationTable] = $stmt;
 			} else
-				$stmt = self::$_deleteAllRelationsStmts[$relationTable];
+				$stmt = self::$__deleteAllRelationsStmts[$relationTable];
 
 			$stmt->execute([":id" => $this->id]);
 		}
 
 		/**
-		 * @param $relationTable
+		 * @param       $relationTable
 		 * @param Model $object
-		 * @param $additionalFields
+		 * @param       $additionalFields
+		 *
 		 * @return $this[]
 		 * @throws \RuntimeException
 		 */
 		public static function getByRelation($relationTable, $object, &$additionalFields = []) {
 			if($self = get_class($object) == __CLASS__) {
-				$relationField        = self::$_relations[$relationTable][0];
-				$foreignRelationField = self::$_relations[$relationTable][1];
+				$relationField        = self::$__relations[$relationTable][0];
+				$foreignRelationField = self::$__relations[$relationTable][1];
 
 				$query = "SELECT `" . $relationField . "`, `" . $foreignRelationField . "`";
 
@@ -571,7 +575,7 @@
 
 				$stmt = $object->getDatabase()->prepare($query . " FROM `{$relationTable}` WHERE `{$foreignRelationField}` = :fid OR `{$relationField}` = :fid");
 			} else {
-				$relationField        = self::$_relations[$relationTable];
+				$relationField        = self::$__relations[$relationTable];
 				$foreignRelationField = $object::getRelations()[$relationTable];
 
 				$query = "SELECT `" . self::TABLE . "`.*";
@@ -611,7 +615,7 @@
 
 		public static function getAllRelations($relationTable, Database $database = null) {
 			if(!$database)
-				$database = self::$_defaultDatabase;
+				$database = self::$__defaultDatabase;
 
 			$stmt = $database->prepare("SELECT * FROM `{$relationTable}`");
 			$stmt->execute();
@@ -622,12 +626,12 @@
 				$element = [];
 
 				foreach($dataset as $name => $value) {
-					if($name == self::$_relations[$relationTable][0]) {
+					if($name == self::$__relations[$relationTable][0]) {
 						$element[0] = self::get($value, null, $database);
 						continue;
 					}
 
-					if($name == self::$_relations[$relationTable][1]) {
+					if($name == self::$__relations[$relationTable][1]) {
 						$element[1] = self::get($value, null, $database);
 						continue;
 					}
@@ -642,80 +646,80 @@
 		}
 
 		public function getDatabase() {
-			return $this->_database;
+			return $this->__database;
 		}
 
 		private static function initializeSelectQueries() {
-			self::$_selectForUpdateStmt = self::$_defaultDatabase->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
-			self::$_selectStmt = self::$_defaultDatabase->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
+			self::$__selectForUpdateStmt = self::$__defaultDatabase->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
+			self::$__selectStmt          = self::$__defaultDatabase->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
 		}
 
 		public static function initialize() {
-			self::$_caches = new \SplObjectStorage();
-			self::$_defaultDatabase = Database::getDefault();
+			self::$__caches          = new \SplObjectStorage();
+			self::$__defaultDatabase = Database::getDefault();
 
 			self::initializeSelectQueries();
 
 			if(defined("self::FOREIGN_KEYS"))
-				self::$_foreignKeys = self::FOREIGN_KEYS;
+				self::$__foreignKeys = self::FOREIGN_KEYS;
 
 			if(defined("self::RELATIONS"))
-				self::$_relations = self::RELATIONS;
+				self::$__relations = self::RELATIONS;
 		}
 
 		public static function clearCache() {
-			self::$_cache = [];
+			self::$__cache = [];
 		}
 
 		public static function clearDatabaseCache(Database $database) {
-			self::$_caches[$database] = [];
+			self::$__caches[$database] = [];
 
-			if($database == self::$_defaultDatabase)
+			if($database == self::$__defaultDatabase)
 				self::clearCache();
 		}
 
 		public static function clearAllCaches() {
 			self::clearCache();
 
-			self::$_caches->rewind();
+			self::$__caches->rewind();
 
-			while(self::$_caches->valid()) {
-				self::$_caches->setInfo([]);
-				self::$_caches->next();
+			while(self::$__caches->valid()) {
+				self::$__caches->setInfo([]);
+				self::$__caches->next();
 			}
 		}
 
 		public static function activateTransactionalCache() {
-			self::$_transactionalCacheActive = true;
+			self::$__transactionalCacheActive = true;
 
-			self::$_caches[self::$_defaultDatabase] = self::$_cache;
-			self::$_cache = [];
+			self::$__caches[self::$__defaultDatabase] = self::$__cache;
+			self::$__cache                            = [];
 		}
 
 		public static function deactivateTransactionalCache() {
-			self::$_transactionalCacheActive = false;
+			self::$__transactionalCacheActive = false;
 
-			self::$_cache = self::$_caches[self::$_defaultDatabase];
+			self::$__cache = self::$__caches[self::$__defaultDatabase];
 		}
 
 		public static function switchDatabase(Database $newDatabase) {
-			self::$_caches[self::$_defaultDatabase] = self::$_cache;
-			self::$_defaultDatabase = $newDatabase;
-			self::$_cache = self::$_caches[self::$_defaultDatabase];
+			self::$__caches[self::$__defaultDatabase] = self::$__cache;
+			self::$__defaultDatabase                  = $newDatabase;
+			self::$__cache                            = self::$__caches[self::$__defaultDatabase];
 
 			self::initializeSelectQueries();
 
-			self::$_insertStmt = null;
-			self::$_updateStmt = null;
-			self::$_deleteStmt = null;
-			self::$_hasRelationStmts = [];
-			self::$_hasOneWayRelationStmts = [];
-			self::$_deleteRelationStmts = [];
-			self::$_deleteOneWayRelationStmts = [];
-			self::$_deleteAllRelationsStmts = [];
+			self::$__insertStmt                = null;
+			self::$__updateStmt                = null;
+			self::$__deleteStmt                = null;
+			self::$__hasRelationStmts          = [];
+			self::$__hasOneWayRelationStmts    = [];
+			self::$__deleteRelationStmts       = [];
+			self::$__deleteOneWayRelationStmts = [];
+			self::$__deleteAllRelationsStmts   = [];
 		}
 
 		public static function registerDatabase(Database $database) {
-			self::$_caches[$database] = [];
+			self::$__caches[$database] = [];
 		}
 	}
