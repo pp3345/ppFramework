@@ -653,7 +653,7 @@
 			return $this->__database;
 		}
 
-		private static function initializeSelectQueries() {
+		private static function __initializeSelectQueries() {
 			self::$__selectForUpdateStmt = self::$__defaultDatabase->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
 			self::$__selectStmt          = self::$__defaultDatabase->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
 		}
@@ -662,7 +662,7 @@
 			self::$__caches          = new \SplObjectStorage();
 			self::$__defaultDatabase = Database::getDefault();
 
-			self::initializeSelectQueries();
+			self::__initializeSelectQueries();
 
 			if(defined("self::FOREIGN_KEYS"))
 				self::$__foreignKeys = self::FOREIGN_KEYS;
@@ -711,7 +711,7 @@
 			self::$__defaultDatabase                  = $newDatabase;
 			self::$__cache                            = self::$__caches[self::$__defaultDatabase];
 
-			self::initializeSelectQueries();
+			self::__initializeSelectQueries();
 
 			self::$__insertStmt                = null;
 			self::$__updateStmt                = null;
