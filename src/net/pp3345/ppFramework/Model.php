@@ -174,25 +174,29 @@
 		public function __debugInfo() {
 			static $recursion = [];
 
-			if(isset($recursion[$this->id]))
-				return "[" . __CLASS__ . ":" . $this->id . "] *RECURSION*";
-
-			$recursion[$this->id] = true;
+			$debugInfoRecursionHelper = ModelRegistry::getInstance()->getDebugInfoRecursionHelper();
+			$debugInfoRecursionHelper[$this] = true;
 
 			$retval = [];
 
 			foreach($this as $name => $value) {
-				if(isset(self::$__foreignKeys[$name])) {
-					$retval[$name] = $this->__get($name);
+				if($name == "__foreignKeyValues")
+					continue;
 
-					if($retval[$name] instanceof self::$__foreignKeys[$name])
-						$retval[$name] = $retval[$name]->__debugInfo();
-				} else
-					$retval[$name] = $this->$name;
+				$retval[$name] = $value;
 			}
 
-			unset($recursion[$this->id]);
+			foreach(self::$__foreignKeys as $name => $class) {
+				if(PHP_MAJOR_VERSION == 5) {
+					if(($value = $this->__get($name)) !== null)
+						$retval[$name] = isset($debugInfoRecursionHelper[$value]) ? "*RECURSION*" : $value->__debugInfo();
+					else
+						$retval[$name] = null;
+				} else
+					$retval[$name] = $this->__get($name);
+			}
 
+			unset($debugInfoRecursionHelper[$this]);
 			return $retval;
 		}
 

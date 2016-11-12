@@ -7,6 +7,7 @@
 
 		private $classes = [];
 		private $databases = [];
+		private $debugInfoRecursionHelper = null;
 
 		/**
 		 * @param Model $class
@@ -56,5 +57,9 @@
 		public function deactivateTransactionalCache() {
 			foreach($this->classes as $class)
 				$class::deactivateTransactionalCache();
+		}
+
+		public function getDebugInfoRecursionHelper() {
+			return $this->debugInfoRecursionHelper ?: ($this->debugInfoRecursionHelper = new \SplObjectStorage());
 		}
 	}
