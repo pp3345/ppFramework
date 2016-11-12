@@ -225,7 +225,7 @@
 						continue;
 
 					$query .= "`{$field}` = ?,";
-					$parameters[] = is_object($value) ? $value->id : $value; // Assume objects are models
+					$parameters[] = $value;
 				}
 
 				foreach(self::$__foreignKeys as $key => $class) {
@@ -248,7 +248,7 @@
 					if($field[0] == "_")
 						continue;
 
-					$parameters[] = is_object($value) ? $value->id : $value;
+					$parameters[] = $value;
 				}
 
 				foreach(self::$__foreignKeys as $key => $class)
@@ -287,7 +287,7 @@
 						continue;
 
 					$query .= "`{$field}` = ?,";
-					$parameters[] = is_object($value) ? $value->id : $value;
+					$parameters[] = $value;
 				}
 
 				foreach(self::$__foreignKeys as $key => $class) {
@@ -313,7 +313,7 @@
 					if($field[0] == "_")
 						continue;
 
-					$parameters[] = is_object($value) ? $value->id : $value;
+					$parameters[] = $value;
 				}
 
 				foreach(self::$__foreignKeys as $key => $class)
