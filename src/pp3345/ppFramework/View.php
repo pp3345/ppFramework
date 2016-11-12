@@ -49,7 +49,7 @@
 				self::$environment = new Twig_Environment($loader);
 
 				// ppFramework built-in views
-				$loader->addPath(__DIR__ . DIRECTORY_SEPARATOR, "ppFramework");
+				$loader->addPath(__DIR__ . DIRECTORY_SEPARATOR . "View", "ppFramework");
 
 				// Application view namespace
 				$path = dirname($applicationReflector->getFileName()) . DIRECTORY_SEPARATOR . $applicationReflector->getShortName() . DIRECTORY_SEPARATOR . "View";
