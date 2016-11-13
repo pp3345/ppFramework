@@ -202,7 +202,7 @@
 		}
 
 		public function __sleep() {
-			return ["id", "_database"];
+			return ["id", "__database"];
 		}
 
 		public function __wakeup() {
