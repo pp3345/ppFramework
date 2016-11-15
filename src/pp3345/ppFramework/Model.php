@@ -110,8 +110,12 @@
 
 			if($id !== null) {
 				if($dataset) {
-					foreach($dataset as $name => $value)
-						$this->$name = $value;
+					foreach($dataset as $name => $value) {
+						if(isset(self::$__foreignKeys[$name]))
+							$this->__foreignKeyValues[$name] = $value;
+						else
+							$this->$name = $value;
+					}
 				} else {
 					if($this->__database->selectForUpdate)
 						$stmt = $this->__database == self::$__defaultDatabase ? self::$__selectForUpdateStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
