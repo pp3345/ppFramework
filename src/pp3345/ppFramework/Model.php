@@ -217,6 +217,10 @@
 			return isset($this->$name) || (isset($this->__foreignKeyValues[$name]));
 		}
 
+		public function __clone() {
+			$this->id = 0;
+		}
+
 		public function save() {
 			if(!self::$__insertStmt || $this->__database != self::$__defaultDatabase) {
 				$query      = "INSERT INTO `" . self::TABLE . "` SET ";
