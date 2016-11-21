@@ -434,12 +434,16 @@
 		}
 
 		/**
-		 * @param Database $database
+		 * @param Database|null     $database
+		 * @param Select\Cache|null $cache
 		 *
 		 * @return Select
 		 */
-		public static function lookup(Database $database = null) {
-			return (new Select())->model(static::class)->database($database ?: self::$__defaultDatabase);
+		public static function lookup(Database $database = null, Select\Cache &$cache = null) {
+			if(func_num_args() == 2)
+				return Select::cached($cache)->from(static::class)->database($database ?: self::$__defaultDatabase);
+			else
+				return (new Select())->from(static::class)->database($database ?: self::$__defaultDatabase);
 		}
 
 		public static function getForeignKeys() {
@@ -712,7 +716,7 @@
 		public static function deactivateTransactionalCache() {
 			self::$__transactionalCacheActive = false;
 
-			self::$__cache = self::$__caches[self::$__defaultDatabase];
+			self::$__cache                            = self::$__caches[self::$__defaultDatabase];
 			self::$__caches[self::$__defaultDatabase] = [];
 		}
 
