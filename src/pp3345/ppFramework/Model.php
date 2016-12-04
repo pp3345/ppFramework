@@ -240,7 +240,7 @@
 				}
 
 				// Remove trailing comma
-				$query[strlen($query) - 1] = "";
+				$query[strlen($query) - 1] = " ";
 
 				$stmt = $this->__database->prepare($query);
 				$stmt->execute($parameters);
