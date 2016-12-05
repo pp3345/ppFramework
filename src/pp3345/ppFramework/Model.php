@@ -487,16 +487,16 @@
 				if($object instanceof $this) {
 					$relationField        = self::$__relations[$relationTable][0];
 					$foreignRelationField = self::$__relations[$relationTable][1];
-					$stmt                 = $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
+					$stmt                 = $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE (`{$relationField}` = ? AND `{$foreignRelationField}` = ?) OR (`{$relationField}` = ? AND `{$foreignRelationField}` = ?)");
 				} else
-					$stmt = $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = :id AND `" . $object::getRelations()[$relationTable] . "` = :fid");
+					$stmt = $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = ? AND `" . $object::getRelations()[$relationTable] . "` = ?");
 
 				if(self::$__defaultDatabase == $this->__database)
 					self::$__deleteRelationStmts[$relationTable] = $stmt;
 			} else
 				$stmt = self::$__deleteRelationStmts[$relationTable];
 
-			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
+			$stmt->execute($object instanceof $this ? [$this->id, $object->id, $object->id, $this->id] : [$this->id, $object->id]);
 
 			return (bool) $stmt->rowCount();
 		}
@@ -526,16 +526,16 @@
 				if($object instanceof $this) {
 					$relationField        = self::$__relations[$relationTable][0];
 					$foreignRelationField = self::$__relations[$relationTable][1];
-					$stmt                 = $this->__database->prepare("SELECT 1 FROM `{$relationTable}` WHERE (`{$relationField}` = :id AND `{$foreignRelationField}` = :fid) OR (`{$relationField}` = :fid AND `{$foreignRelationField}` = :id)");
+					$stmt                 = $this->__database->prepare("SELECT 1 FROM `{$relationTable}` WHERE (`{$relationField}` = ? AND `{$foreignRelationField}` = ?) OR (`{$relationField}` = ? AND `{$foreignRelationField}` = ?)");
 				} else
-					$stmt = $this->__database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = :id AND `" . $object::getRelations()[$relationTable] . "` = :fid");
+					$stmt = $this->__database->prepare("SELECT 1 FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = ? AND `" . $object::getRelations()[$relationTable] . "` = ?");
 
 				if($this->__database == self::$__defaultDatabase)
 					self::$__hasRelationStmts[$relationTable] = $stmt;
 			} else
 				$stmt = self::$__hasRelationStmts[$relationTable];
 
-			$stmt->execute([":id" => $this->id, ":fid" => $object->id]);
+			$stmt->execute($object instanceof $this ? [$this->id, $object->id, $object->id, $this->id] : [$this->id, $object->id]);
 
 			return (bool) $stmt->rowCount();
 		}
@@ -560,15 +560,15 @@
 		public function deleteAllRelations($relationTable) {
 			if(!isset(self::$__deleteAllRelationsStmts[$relationTable]) || $this->__database != self::$__defaultDatabase) {
 				$stmt = is_array(self::$__relations[$relationTable])
-					? $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable][0] . "` = :id OR `" . self::$__relations[$relationTable][1] . "` = :id")
-					: $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = :id");
+					? $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable][0] . "` = ? OR `" . self::$__relations[$relationTable][1] . "` = ?")
+					: $this->__database->prepare("DELETE FROM `{$relationTable}` WHERE `" . self::$__relations[$relationTable] . "` = ?");
 
 				if($this->__database == self::$__defaultDatabase)
 					self::$__deleteAllRelationsStmts[$relationTable] = $stmt;
 			} else
 				$stmt = self::$__deleteAllRelationsStmts[$relationTable];
 
-			$stmt->execute([":id" => $this->id]);
+			$stmt->execute(is_array(self::$__relations[$relationTable]) ? [$this->id, $this->id] : [$this->id]);
 		}
 
 		/**
@@ -590,7 +590,8 @@
 					$query .= ", `$name`";
 				}
 
-				$stmt = $object->getDatabase()->prepare($query . " FROM `{$relationTable}` WHERE `{$foreignRelationField}` = :fid OR `{$relationField}` = :fid");
+				$stmt = $object->getDatabase()->prepare($query . " FROM `{$relationTable}` WHERE `{$foreignRelationField}` = ? OR `{$relationField}` = ?");
+				$stmt->execute([$object->id, $object->id]);
 			} else {
 				$relationField        = self::$__relations[$relationTable];
 				$foreignRelationField = $object::getRelations()[$relationTable];
@@ -601,10 +602,9 @@
 					$query .= ", `" . $relationTable . "`.`$name` AS `__A" . $name . "`";
 				}
 
-				$stmt = $object->getDatabase()->prepare($query . " FROM `{$relationTable}` JOIN `" . self::TABLE . "` ON `" . self::TABLE . "`.`id` = `{$relationTable}`.`{$relationField}` WHERE `{$relationTable}`.`{$foreignRelationField}` = :fid");
+				$stmt = $object->getDatabase()->prepare($query . " FROM `{$relationTable}` JOIN `" . self::TABLE . "` ON `" . self::TABLE . "`.`id` = `{$relationTable}`.`{$relationField}` WHERE `{$relationTable}`.`{$foreignRelationField}` = ?");
+				$stmt->execute([$object->id]);
 			}
-
-			$stmt->execute([":fid" => $object->id]);
 
 			$elements = $aFields = [];
 
