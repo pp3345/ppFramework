@@ -95,8 +95,9 @@
 		 */
 		private static $__deleteAllRelationsStmts = [];
 
-		private static $__foreignKeys = [];
-		private static $__relations   = [];
+		private static $__foreignKeys             = [];
+		private static $__foreignKeyLockBehaviors = [];
+		private static $__relations               = [];
 
 		/**
 		 * @var Database
@@ -152,7 +153,17 @@
 
 					$class = self::$__foreignKeys[$name];
 
-					return $this->__foreignKeyValues[$name] = $class::get($this->__foreignKeyValues[$name], null, $this->__database);
+					try {
+						if(isset(self::$__foreignKeyLockBehaviors[$name])) {
+							$resetLockBehavior                 = $this->__database->selectForUpdate;
+							$this->__database->selectForUpdate = self::$__foreignKeyLockBehaviors[$name];
+						}
+
+						return $this->__foreignKeyValues[$name] = $class::get($this->__foreignKeyValues[$name], null, $this->__database);
+					} finally {
+						if(isset($resetLockBehavior))
+							$this->__database->selectForUpdate = $resetLockBehavior;
+					}
 				} else
 					return null;
 			}
@@ -682,6 +693,9 @@
 
 			if(defined("self::RELATIONS"))
 				self::$__relations = self::RELATIONS;
+
+			if(defined("self::FOREIGN_KEY_LOCK_BEHAVIORS"))
+				self::$__foreignKeyLockBehaviors = self::FOREIGN_KEY_LOCK_BEHAVIORS;
 		}
 
 		public static function clearCache() {
