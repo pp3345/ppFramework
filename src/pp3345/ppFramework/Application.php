@@ -119,9 +119,9 @@
 			$component = $classPath::getInstance();
 
 			if(isset($argv[1]) && is_callable([$component, $argv[1]]))
-				$component->{$argv[1]}($this, ...array_slice($argv, 2));
+				$component->{$argv[1]}(...array_slice($argv, 2));
 			else if(is_callable([$component, $argv[0]]))
-				$component->{$argv[0]}($this, ...array_slice($argv, 1));
+				$component->{$argv[0]}(...array_slice($argv, 1));
 			else
 				throw new CLIComponentActionUnknownException(isset($argv[1]) ? "Unknown action '$argv[1]' specified for CLI component $argv[0]" : "Please specify an action for CLI component $argv[0]");
 		}

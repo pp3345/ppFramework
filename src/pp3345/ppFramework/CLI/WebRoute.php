@@ -28,14 +28,14 @@
 	class WebRoute {
 		use Singleton;
 
-		public function WebRoute(Application $application, $path = "/", $method = "GET", $cookies = "") {
+		public function WebRoute($path = "/", $method = "GET", $cookies = "") {
 			foreach(explode(";", $cookies) as $cookie) {
 				$cookie              = explode("=", $cookie, 2);
 				$_COOKIE[$cookie[0]] = isset($cookie[1]) ? $cookie[1] : "";
 			}
 
 			try {
-				$application->route($method, $path);
+				Application::getInstance()->route($method, $path);
 			} catch(NotFoundException $e) {
 				$this->help();
 				throw $e;
