@@ -110,28 +110,11 @@
 			$this->__database = $database ?: self::$__defaultDatabase;
 
 			if($id !== null) {
-				if($dataset) {
-					foreach($dataset as $name => $value) {
-						if(isset(self::$__foreignKeys[$name]))
-							$this->__foreignKeyValues[$name] = $value;
-						else
-							$this->$name = $value;
-					}
-				} else {
-					if($this->__database->selectForUpdate)
-						$stmt = $this->__database == self::$__defaultDatabase ? self::$__selectForUpdateStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
+				foreach($dataset ?: self::fetchFromDatabase($id, $this->__database)->fetch(\PDO::FETCH_ASSOC) as $name => $value) {
+					if(isset(self::$__foreignKeys[$name]))
+						$this->__foreignKeyValues[$name] = $value;
 					else
-						$stmt = $this->__database == self::$__defaultDatabase ? self::$__selectStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
-
-					if(!$stmt->execute([$id]) || !$stmt->rowCount())
-						throw new DataNotFoundException(__CLASS__, $id);
-
-					foreach($stmt->fetch(\PDO::FETCH_ASSOC) as $name => $value) {
-						if(isset(self::$__foreignKeys[$name]))
-							$this->__foreignKeyValues[$name] = $value;
-						else
-							$this->$name = $value;
-					}
+						$this->$name = $value;
 				}
 
 				if($this->__database == self::$__defaultDatabase)
@@ -143,6 +126,18 @@
 					self::$__caches[$database] = $cache;
 				}
 			}
+		}
+
+		protected static function fetchFromDatabase($id, Database $database) {
+			if($database->selectForUpdate)
+				$stmt = $database == self::$__defaultDatabase ? self::$__selectForUpdateStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ? FOR UPDATE");
+			else
+				$stmt = $database == self::$__defaultDatabase ? self::$__selectStmt : $database->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
+
+			if(!$stmt->execute([$id]) || !$stmt->rowCount())
+				throw new DataNotFoundException(__CLASS__, $id);
+
+			return $stmt;
 		}
 
 		public function __get($name) {
@@ -241,12 +236,12 @@
 					if($field[0] == "_")
 						continue;
 
-					$query .= "`{$field}` = ?,";
+					$query        .= "`{$field}` = ?,";
 					$parameters[] = $value;
 				}
 
 				foreach(self::$__foreignKeys as $key => $class) {
-					$query .= "`{$key}` = ?,";
+					$query        .= "`{$key}` = ?,";
 					$parameters[] = isset($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : null;
 				}
 
@@ -303,19 +298,19 @@
 					if($field[0] == "_")
 						continue;
 
-					$query .= "`{$field}` = ?,";
+					$query        .= "`{$field}` = ?,";
 					$parameters[] = $value;
 				}
 
 				foreach(self::$__foreignKeys as $key => $class) {
-					$query .= "`{$key}` = ?,";
+					$query        .= "`{$key}` = ?,";
 					$parameters[] = isset($this->__foreignKeyValues[$key]) ? (is_object($this->__foreignKeyValues[$key]) ? $this->__foreignKeyValues[$key]->id : $this->__foreignKeyValues[$key]) : null;
 				}
 
 				// Remove trailing comma
 				$query[strlen($query) - 1] = " ";
 
-				$query .= "WHERE `id` = ?";
+				$query        .= "WHERE `id` = ?";
 				$parameters[] = $this->id;
 
 				$stmt = $this->__database->prepare($query);
@@ -482,7 +477,7 @@
 			$query = "INSERT INTO `{$relationTable}` SET `{$relationField}` = ?, `{$foreignRelationField}` = ?";
 
 			foreach($fields as $name => $value) {
-				$query .= ", `$name` = ?";
+				$query        .= ", `$name` = ?";
 				$parameters[] = $value;
 			}
 

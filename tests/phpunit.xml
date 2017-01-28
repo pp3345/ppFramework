@@ -24,6 +24,8 @@
             <file>../src/pp3345/ppFramework/SQL/Select/Subquery.php</file>
             <file>../src/pp3345/ppFramework/SQL/Select/Cache.php</file>
             <file>../src/pp3345/ppFramework/SQL/Select/Cache/Subquery.php</file>
+            <file>../src/pp3345/ppFramework/Model/SingleTableInheritanceModel.php</file>
+            <file>../src/pp3345/ppFramework/Model.php</file>
         </whitelist>
     </filter>
 </phpunit>
