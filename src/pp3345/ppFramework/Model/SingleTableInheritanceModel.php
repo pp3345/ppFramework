@@ -25,9 +25,7 @@
 	use pp3345\ppFramework\Model;
 
 	trait SingleTableInheritanceModel {
-		use Model {
-			get as mGet;
-		}
+		use Model;
 
 		protected static function getClassFromObject(\stdClass $object) {
 			return isset($object->class) && $object->class ? $object->class : static::class;
