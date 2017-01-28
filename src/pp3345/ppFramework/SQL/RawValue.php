@@ -1,7 +1,7 @@
 <?php
 
 	/**
-	 * Copyright (c) 2014 - 2016 Yussuf Khalil
+	 * Copyright (c) 2014 - 2017 Yussuf Khalil
 	 *
 	 * This file is part of ppFramework.
 	 *
@@ -23,10 +23,10 @@
 
 	class RawValue {
 		private $value;
-		public $parameters;
+		public  $parameters;
 
 		public function __construct($value, $parameters = []) {
-			$this->value = $value;
+			$this->value      = $value;
 			$this->parameters = $parameters;
 		}
 

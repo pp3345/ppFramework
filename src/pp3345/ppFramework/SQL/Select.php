@@ -1,7 +1,7 @@
 <?php
 
 	/**
-	 * Copyright (c) 2014 - 2016 Yussuf Khalil
+	 * Copyright (c) 2014 - 2017 Yussuf Khalil
 	 *
 	 * This file is part of ppFramework.
 	 *
@@ -201,7 +201,7 @@
 
 		public function useIndex($name, $purpose = self::INDEX_HINT_DEFAULT) {
 			$this->currentPosition = self::POSITION_TABLES;
-			$this->from .= " USE INDEX ";
+			$this->from            .= " USE INDEX ";
 			if($purpose)
 				$this->from .= $purpose . " ";
 			$this->from .= "(`" . $name . "`)";
@@ -211,7 +211,7 @@
 
 		public function ignoreIndex($name, $purpose = self::INDEX_HINT_DEFAULT) {
 			$this->currentPosition = self::POSITION_TABLES;
-			$this->from .= " IGNORE INDEX ";
+			$this->from            .= " IGNORE INDEX ";
 			if($purpose)
 				$this->from .= $purpose . " ";
 			$this->from .= "(`" . $name . "`)";
@@ -221,7 +221,7 @@
 
 		public function forceIndex($name, $purpose = self::INDEX_HINT_DEFAULT) {
 			$this->currentPosition = self::POSITION_TABLES;
-			$this->from .= " FORCE INDEX ";
+			$this->from            .= " FORCE INDEX ";
 			if($purpose)
 				$this->from .= $purpose . " ";
 			$this->from .= "(`" . $name . "`)";
@@ -259,14 +259,14 @@
 
 		public function on($field = "", ...$args) {
 			$this->currentPosition = self::POSITION_JOINS;
-			$this->joins .= " ON " . $this->parseCondition($field, $args);
+			$this->joins           .= " ON " . $this->parseCondition($field, $args);
 
 			return $this;
 		}
 
 		public function using(...$columns) {
 			$this->currentPosition = self::POSITION_JOINS;
-			$this->joins .= " USING (";
+			$this->joins           .= " USING (";
 
 			foreach($columns as $column) {
 				if(isset($first))
@@ -673,7 +673,7 @@
 					} else if($args[0] === null)
 						$condition .= "IS NULL";
 					else {
-						$condition .= "= ?";
+						$condition          .= "= ?";
 						$this->parameters[] = is_object($args[0]) ? $args[0]->id : $args[0];
 					}
 
@@ -689,7 +689,7 @@
 					} else if($args[1] === null)
 						$condition .= "NULL";
 					else {
-						$condition .= "?";
+						$condition          .= "?";
 						$this->parameters[] = is_object($args[1]) ? $args[1]->id : $args[1];
 					}
 			}
@@ -905,7 +905,7 @@
 					}
 				}
 
-				$offset += $batchSize;
+				$offset    += $batchSize;
 				$processed += $batchSize;
 			} while($rows >= $batchSize && (!$originalLimit || $originalLimit - $processed > 0));
 		}

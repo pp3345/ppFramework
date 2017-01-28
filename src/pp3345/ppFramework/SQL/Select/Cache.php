@@ -1,7 +1,7 @@
 <?php
 
 	/**
-	 * Copyright (c) 2014 - 2016 Yussuf Khalil
+	 * Copyright (c) 2014 - 2017 Yussuf Khalil
 	 *
 	 * This file is part of ppFramework.
 	 *
@@ -214,7 +214,7 @@
 
 		public function ready() {
 			$this->parameters = [];
-			$this->model = $this->select->model;
+			$this->model      = $this->select->model;
 
 			return (bool) $this->select->stmt;
 		}
