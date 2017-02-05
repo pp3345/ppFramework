@@ -31,6 +31,13 @@
 			return isset($object->class) && $object->class ? $object->class : static::class;
 		}
 
+		/**
+		 * @param                $id
+		 * @param \stdClass|null $dataset
+		 * @param Database|null  $database
+		 *
+		 * @return $this
+		 */
 		public static function get($id, \stdClass $dataset = null, Database $database = null) {
 			if($database && $database != self::$__defaultDatabase) {
 				if(isset(self::$__caches[$database][$id]))
