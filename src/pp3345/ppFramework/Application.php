@@ -59,7 +59,21 @@
 				$function($class);
 
 				if(class_exists($class, false)) {
-					if(isset(class_uses($class)[Model::class]))
+					$searchModelTrait = function ($class) use (&$searchModelTrait) {
+						$uses = \class_uses($class);
+
+						if(isset($uses[Model::class]))
+							return true;
+
+						foreach($uses as $class) {
+							if($searchModelTrait($class))
+								return true;
+						}
+
+						return false;
+					};
+
+					if($searchModelTrait($class))
 						ModelRegistry::getInstance()->registerClass($class);
 
 					try {
