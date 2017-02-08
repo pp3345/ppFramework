@@ -22,7 +22,20 @@
 	namespace pp3345\ppFramework\Exception;
 
 	class DataNotFoundException extends NotFoundException {
+		private $class;
+		private $id;
+
 		public function __construct($class, $id) {
+			$this->class   = $class;
+			$this->id      = $id;
 			$this->message = "Unable to find entity '{$id}' of class {$class}";
+		}
+
+		public function getClass() {
+			return $this->class;
+		}
+
+		public function getId() {
+			return $this->id;
 		}
 	}
