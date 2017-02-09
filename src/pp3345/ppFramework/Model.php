@@ -677,9 +677,9 @@
 			self::$__selectStmt          = self::$__defaultDatabase->prepare("SELECT * FROM `" . self::TABLE . "` WHERE `id` = ?");
 		}
 
-		public static function initialize() {
+		public static function initialize(Database $database = null) {
 			self::$__caches          = new \SplObjectStorage();
-			self::$__defaultDatabase = Database::getDefault();
+			self::$__defaultDatabase = $database ?: Database::getDefault();
 
 			self::__initializeSelectQueries();
 
