@@ -21,11 +21,25 @@
 
 	namespace pp3345\ppFramework\Model;
 
+	use function get_class;
 	use pp3345\ppFramework\Database;
 	use pp3345\ppFramework\Model;
 
 	trait SingleTableInheritanceModel {
-		use Model;
+		use Model {
+			__construct as __mConstruct;
+		}
+
+		public function __construct($id = null, \stdClass $dataset = null, Database $database = null) {
+			if($id === null)
+				$this->storeObjectClass();
+
+			$this->__mConstruct($id, $dataset, $database);
+		}
+
+		protected function storeObjectClass() {
+			$this->class = get_class($this);
+		}
 
 		protected static function getClassFromObject(\stdClass $object) {
 			return isset($object->class) && $object->class ? $object->class : static::class;

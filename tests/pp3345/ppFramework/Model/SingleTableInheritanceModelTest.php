@@ -21,6 +21,8 @@
 
 	namespace pp3345\ppFramework\Model;
 
+	use function array_search;
+	use function get_class;
 	use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 	use Mockery\MockInterface;
 	use PHPUnit\Framework\TestCase;
@@ -65,9 +67,9 @@
 			$a2->class = ModelStubA::class;
 			$a2->x     = 2000;
 
-			$a3        = new \stdClass();
-			$a3->id    = 3;
-			$a3->x     = 3000;
+			$a3     = new \stdClass();
+			$a3->id = 3;
+			$a3->x  = 3000;
 
 			$this->stubAMockStmt->shouldReceive("execute")->once()->with([1])->andReturn(true)->globally()->ordered();
 			$this->stubAMockStmt->shouldReceive("rowCount")->once()->with()->andReturn(1)->globally()->ordered();
@@ -96,15 +98,15 @@
 		}
 
 		public function testCustomMapping() {
-			$b1 = new \stdClass();
-			$b1->id = 50;
+			$b1       = new \stdClass();
+			$b1->id   = 50;
 			$b1->type = 1;
-			$b1->y = 21;
+			$b1->y    = 21;
 
-			$b2 = new \stdClass();
-			$b2->id = 60;
+			$b2       = new \stdClass();
+			$b2->id   = 60;
 			$b2->type = 2;
-			$b2->y = 42;
+			$b2->y    = 42;
 
 			$this->stubBMockStmt->shouldReceive("execute")->once()->with([50])->andReturn(true)->globally()->ordered();
 			$this->stubBMockStmt->shouldReceive("rowCount")->once()->with()->andReturn(1)->globally()->ordered();
@@ -127,6 +129,18 @@
 			$this->assertSame($bChild2, ModelStubB::get(60, $b2));
 			$this->assertEquals(42, $bChild2->y);
 		}
+
+		public function testClassStored() {
+			$a = new ModelStubA();
+			$this->assertEquals(ModelStubA::class, $a->class);
+			$aChild = new ModelStubAChild();
+			$this->assertEquals(ModelStubAChild::class, $aChild->class);
+
+			$bChildA = new ModelStubBChildA();
+			$this->assertEquals(1, $bChildA->type);
+			$bChildB = new ModelStubBChildB();
+			$this->assertEquals(2, $bChildB->type);
+		}
 	}
 
 	class ModelStubA {
@@ -146,6 +160,10 @@
 
 		public $type;
 		public $y;
+
+		protected function storeObjectClass() {
+			$this->type = array_search(get_class($this), self::CLASS_MAP);
+		}
 
 		protected static function getClassFromObject(\stdClass $object) {
 			return self::CLASS_MAP[$object->type];
