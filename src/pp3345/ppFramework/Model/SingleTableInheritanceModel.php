@@ -24,10 +24,13 @@
 	use function get_class;
 	use pp3345\ppFramework\Database;
 	use pp3345\ppFramework\Model;
+	use pp3345\ppFramework\SQL\Select;
+	use pp3345\ppFramework\SQL\Select\Cache;
 
 	trait SingleTableInheritanceModel {
 		use Model {
-			__construct as __mConstruct;
+			__construct as protected __mConstruct;
+			lookup as protected mLookup;
 		}
 
 		public function __construct($id = null, \stdClass $dataset = null, Database $database = null) {
@@ -43,6 +46,10 @@
 
 		protected static function getClassFromObject(\stdClass $object) {
 			return isset($object->class) && $object->class ? $object->class : static::class;
+		}
+
+		protected static function lookupFilterClass(Select $select) {
+			$select->where("class", static::class);
 		}
 
 		/**
@@ -68,5 +75,11 @@
 
 			$class = static::getClassFromObject($dataset ?: $dataset = static::fetchFromDatabase($id, self::$__defaultDatabase)->fetchObject());
 			return new $class($id, $dataset);
+		}
+
+		public static function lookup(Database $database = null, Cache &$cache = null) {
+			$select = static::mLookup($database, $cache);
+			static::lookupFilterClass($select);
+			return $select;
 		}
 	}

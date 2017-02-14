@@ -27,6 +27,7 @@
 	use Mockery\MockInterface;
 	use PHPUnit\Framework\TestCase;
 	use pp3345\ppFramework\Database;
+	use pp3345\ppFramework\SQL\Select;
 
 	class SingleTableInheritanceModelTest extends TestCase {
 		use MockeryPHPUnitIntegration;
@@ -141,6 +142,26 @@
 			$bChildB = new ModelStubBChildB();
 			$this->assertEquals(2, $bChildB->type);
 		}
+
+		public function testLookup() {
+			$stmt = \Mockery::mock("PDOStatement");
+			$this->assertEquals("SELECT `ModelStubATable`.* FROM `ModelStubATable` WHERE `class` = ?", ModelStubA::lookup()->build());
+			$this->assertEquals("SELECT `ModelStubATable`.* FROM `ModelStubATable` WHERE `class` = ?", ModelStubAChild::lookup()->build());
+			$this->assertEquals("SELECT `ModelStubBTable`.* FROM `ModelStubBTable` WHERE `type` = ?", ModelStubBChildA::lookup()->build());
+
+			$this->mockDatabase->shouldReceive("prepare")->once()->with("SELECT `ModelStubATable`.* FROM `ModelStubATable` WHERE `class` = ?")->andReturn($stmt)->globally()->ordered();
+			$stmt->shouldReceive("execute")->once()->with([ModelStubA::class])->globally()->ordered();
+			ModelStubA::lookup()->run();
+			$this->mockDatabase->shouldReceive("prepare")->once()->with("SELECT `ModelStubATable`.* FROM `ModelStubATable` WHERE `class` = ?")->andReturn($stmt)->globally()->ordered();
+			$stmt->shouldReceive("execute")->once()->with([ModelStubAChild::class])->globally()->ordered();
+			ModelStubAChild::lookup()->run();
+			$this->mockDatabase->shouldReceive("prepare")->once()->with("SELECT `ModelStubBTable`.* FROM `ModelStubBTable` WHERE `type` = ?")->andReturn($stmt)->globally()->ordered();
+			$stmt->shouldReceive("execute")->once()->with([1])->globally()->ordered();
+			ModelStubBChildA::lookup()->run();
+			$this->mockDatabase->shouldReceive("prepare")->once()->with("SELECT `ModelStubBTable`.* FROM `ModelStubBTable` WHERE `type` = ?")->andReturn($stmt)->globally()->ordered();
+			$stmt->shouldReceive("execute")->once()->with([2])->globally()->ordered();
+			ModelStubBChildB::lookup()->run();
+		}
 	}
 
 	class ModelStubA {
@@ -167,6 +188,10 @@
 
 		protected static function getClassFromObject(\stdClass $object) {
 			return self::CLASS_MAP[$object->type];
+		}
+
+		protected static function lookupFilterClass(Select $select) {
+			$select->where("type", array_search(static::class, self::CLASS_MAP));
 		}
 
 		const TABLE     = "ModelStubBTable";

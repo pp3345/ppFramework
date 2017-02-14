@@ -446,10 +446,7 @@
 		 * @return Select
 		 */
 		public static function lookup(Database $database = null, Select\Cache &$cache = null) {
-			if(func_num_args() == 2)
-				return Select::cached($cache)->from(static::class)->database($database ?: self::$__defaultDatabase);
-			else
-				return (new Select())->from(static::class)->database($database ?: self::$__defaultDatabase);
+			return Select::cached($cache)->from(self::class)->database($database ?: self::$__defaultDatabase);
 		}
 
 		public static function getForeignKeys() {
