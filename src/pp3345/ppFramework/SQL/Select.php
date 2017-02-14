@@ -26,6 +26,7 @@
 	use pp3345\ppFramework\Exception\MissingForeignKeyDefinitionException;
 	use pp3345\ppFramework\Exception\MissingRelationDefinitionException;
 	use pp3345\ppFramework\Model;
+	use pp3345\ppFramework\ModelRegistry;
 	use pp3345\ppFramework\SQL\Select\Cache;
 	use pp3345\ppFramework\SQL\Select\Subquery;
 
@@ -183,7 +184,7 @@
 				$this->from .= ", ";
 
 			if($tableOrModel) {
-				if(class_exists($tableOrModel) && isset(class_uses($tableOrModel)[Model::class])) {
+				if(class_exists($tableOrModel) && ModelRegistry::isModelClass($tableOrModel)) {
 					$this->model      = $tableOrModel;
 					$this->modelAlias = $alias ?: $tableOrModel::TABLE;
 
@@ -821,9 +822,9 @@
 				$query .= "DISTINCT ";
 
 			if($this->fields)
-				$query .= $this->fields . "";
+				$query .= $this->fields;
 			else if($this->model)
-				$query .= "`" . $this->modelAlias . "`." . "*";
+				$query .= "`" . $this->modelAlias . "`.*";
 			else
 				$query .= "*";
 

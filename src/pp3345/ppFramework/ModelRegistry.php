@@ -81,4 +81,18 @@
 		public function getDebugInfoRecursionHelper() {
 			return $this->debugInfoRecursionHelper ?: ($this->debugInfoRecursionHelper = new \SplObjectStorage());
 		}
+
+		public static function isModelClass($class) {
+			$uses = \class_uses($class);
+
+			if(isset($uses[Model::class]))
+				return true;
+
+			foreach($uses as $class) {
+				if(self::isModelClass($class))
+					return true;
+			}
+
+			return false;
+		}
 	}
