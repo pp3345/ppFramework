@@ -876,39 +876,45 @@
 		}
 
 		public function generate($parameters = [], $batchSize = 100) {
-			$originalLimit = $this->limit;
-			$offset        = $this->offset ?: 0;
-			$processed     = 0;
+			$originalLimit  = $this->limit;
+			$originalOffset = $this->offset;
+			$offset         = $this->offset ?: 0;
+			$processed      = 0;
 
 			$this->limit($batchSize);
 
-			do {
-				if($originalLimit && $originalLimit - $processed < $batchSize)
-					$this->limit($batchSize = $originalLimit - $processed);
+			try {
+                do {
+                    if ($originalLimit && $originalLimit - $processed < $batchSize)
+                        $this->limit($batchSize = $originalLimit - $processed);
 
-				$this->offset($offset);
-				$stmt = $this->run($parameters);
+                    $this->offset($offset);
+                    $stmt = $this->run($parameters);
 
-				$rows = 0;
+                    $rows = 0;
 
-				if($model = $this->model) {
-					while($result = $stmt->fetchObject()) {
-						if(!isset($result->id))
-							throw new InvalidSQLException("Model queries must include id field");
+                    if ($model = $this->model) {
+                        while ($result = $stmt->fetchObject()) {
+                            if (!isset($result->id))
+                                throw new InvalidSQLException("Model queries must include id field");
 
-						yield $model::get($result->id, $result, $this->database);
-						$rows++;
-					}
-				} else {
-					while($result = $stmt->fetch()) {
-						yield $result;
-						$rows++;
-					}
-				}
+                            yield $model::get($result->id, $result, $this->database);
+                            $rows++;
+                        }
+                    } else {
+                        while ($result = $stmt->fetch()) {
+                            yield $result;
+                            $rows++;
+                        }
+                    }
 
-				$offset    += $batchSize;
-				$processed += $batchSize;
-			} while($rows >= $batchSize && (!$originalLimit || $originalLimit - $processed > 0));
+                    $offset += $batchSize;
+                    $processed += $batchSize;
+                } while ($rows >= $batchSize && (!$originalLimit || $originalLimit - $processed > 0));
+            } finally {
+			    $this->limit($originalLimit);
+			    $this->offset($originalOffset);
+            }
 		}
 
 		public function unique($parameters = []) {

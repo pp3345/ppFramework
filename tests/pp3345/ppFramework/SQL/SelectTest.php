@@ -27,8 +27,9 @@
 	use pp3345\ppFramework\Database;
 	use pp3345\ppFramework\Exception\InvalidSQLException;
 	use pp3345\ppFramework\Model;
+    use ReflectionObject;
 
-	class SelectTest extends TestCase {
+    class SelectTest extends TestCase {
 		use MockeryPHPUnitIntegration;
 
 		/**
@@ -822,10 +823,22 @@
 			$stmt->shouldReceive("fetch")->once()->andReturn(null)->globally()->ordered();
 
 			$i = 0;
-			foreach((new Select())->from("foo")->where("x", 42)->generate([], 2) as $result) {
+			$select = (new Select())->from("foo")->where("x", 42);
+			foreach($select->generate([], 2) as $result) {
 				$this->assertEquals(++$i, $result["id"]);
 				$this->assertEquals(42, $result["x"]);
 			}
+
+			// test that limit and offset are correctly reset after generate()
+			$reflector = new ReflectionObject($select);
+			$property = $reflector->getProperty("limit");
+			$property->setAccessible(true);
+			$this->assertNull($property->getValue($select));
+
+			$reflector = new ReflectionObject($select);
+			$property = $reflector->getProperty("offset");
+			$property->setAccessible(true);
+			$this->assertNull($property->getValue($select));
 
 			$object1 = new \stdClass();
 			$object1->id = 1;
