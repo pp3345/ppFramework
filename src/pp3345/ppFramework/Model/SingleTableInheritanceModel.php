@@ -49,7 +49,8 @@
 		}
 
 		protected static function lookupFilterClass(Select $select) {
-			$select->where("class", static::class);
+			if(!isset(class_uses(static::class)[SingleTableInheritanceModel::class]))
+				$select->where("class", static::class);
 		}
 
 		/**

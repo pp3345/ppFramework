@@ -145,12 +145,12 @@
 
 		public function testLookup() {
 			$stmt = \Mockery::mock("PDOStatement");
-			$this->assertEquals("SELECT `ModelStubATable`.* FROM `ModelStubATable` WHERE `class` = ?", ModelStubA::lookup()->build());
+			$this->assertEquals("SELECT `ModelStubATable`.* FROM `ModelStubATable`", ModelStubA::lookup()->build());
 			$this->assertEquals("SELECT `ModelStubATable`.* FROM `ModelStubATable` WHERE `class` = ?", ModelStubAChild::lookup()->build());
 			$this->assertEquals("SELECT `ModelStubBTable`.* FROM `ModelStubBTable` WHERE `type` = ?", ModelStubBChildA::lookup()->build());
 
-			$this->mockDatabase->shouldReceive("prepare")->once()->with("SELECT `ModelStubATable`.* FROM `ModelStubATable` WHERE `class` = ?")->andReturn($stmt)->globally()->ordered();
-			$stmt->shouldReceive("execute")->once()->with([ModelStubA::class])->globally()->ordered();
+			$this->mockDatabase->shouldReceive("prepare")->once()->with("SELECT `ModelStubATable`.* FROM `ModelStubATable`")->andReturn($stmt)->globally()->ordered();
+			$stmt->shouldReceive("execute")->once()->with([])->globally()->ordered();
 			ModelStubA::lookup()->run();
 			$this->mockDatabase->shouldReceive("prepare")->once()->with("SELECT `ModelStubATable`.* FROM `ModelStubATable` WHERE `class` = ?")->andReturn($stmt)->globally()->ordered();
 			$stmt->shouldReceive("execute")->once()->with([ModelStubAChild::class])->globally()->ordered();
