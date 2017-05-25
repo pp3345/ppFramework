@@ -239,7 +239,7 @@
 			$this->joins .= $type . " ";
 
 			if($tableOrModel) {
-				if(class_exists($tableOrModel) && isset(class_uses($tableOrModel)[Model::class])) {
+				if(class_exists($tableOrModel) && ModelRegistry::isModelClass($tableOrModel)) {
 					$this->joins .= "`" . $tableOrModel::TABLE . "`";
 
 					if($autoON && $this->model && strpos($type, "NATURAL") === false) {
