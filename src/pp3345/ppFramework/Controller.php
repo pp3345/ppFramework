@@ -23,4 +23,8 @@
 
 	abstract class Controller {
 		use SingletonContainer;
-	}
+
+		public function __call($name, $arguments) {
+            $this->$name(...$arguments);
+        }
+    }

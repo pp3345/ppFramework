@@ -28,6 +28,8 @@
 	use pp3345\ppFramework\Exception\HTTPException;
 	use pp3345\ppFramework\Exception\NotFoundException;
 	use pp3345\ppFramework\Exception\UnknownNamedRouteException;
+	use ReflectionException;
+	use ReflectionMethod;
 	use Throwable;
 
 	abstract class Application {
@@ -126,6 +128,16 @@
 				throw new CLIComponentActionUnknownException(isset($argv[1]) ? "Unknown action '$argv[1]' specified for CLI component $argv[0]" : "Please specify an action for CLI component $argv[0]");
 		}
 
+		private function isPublicRoutable($controller, $function) {
+			try {
+				if((new ReflectionMethod($controller, $function))->isPublic())
+					return true;
+			} catch(ReflectionException $e) {
+			}
+
+			return false;
+		}
+
 		public function route($method, $originalURI) {
 			if($originalURI[0] != '/') {
 				$namedRoute = ($argumentPos = strpos($originalURI, "/")) ? $namedRoute = substr($originalURI, 0, $argumentPos) : $originalURI;
@@ -166,13 +178,10 @@
 
 			if(isset($controller)) {
 				if(!isset($slicedURI[2]) || (count($slicedURI) == 3 && !$slicedURI[2])) {
-					if(!is_callable([$controller, $slicedURI[1]])) {
+					if($this->isPublicRoutable($controller, $slicedURI[1]))
+						$controller->{$slicedURI[1]}();
+					else
 						$this->routeDefault();
-
-						return;
-					}
-
-					$controller->{$slicedURI[1]}();
 
 					return;
 				}
@@ -180,14 +189,14 @@
 				for($i = count($slicedURI) - 2; $i; $i--) {
 					$function = implode(array_slice($slicedURI, 2, $i));
 
-					if(is_callable([$controller, $function])) {
+					if($this->isPublicRoutable($controller, $function)) {
 						$controller->$function(...array_map('urldecode', array_slice($slicedURI, $i + 2, count($slicedURI) - $i)));
 
 						return;
 					}
 				}
 
-				if(is_callable([$controller, $slicedURI[1]])) {
+				if($this->isPublicRoutable($controller, $slicedURI[1])) {
 					$controller->{$slicedURI[1]}(...array_map('urldecode', array_slice($slicedURI, 2)));
 
 					return;
