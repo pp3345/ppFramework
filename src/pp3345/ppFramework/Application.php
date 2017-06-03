@@ -159,7 +159,7 @@
 
 			$uri = $originalURI;
 
-			if(class_exists($classPath))
+			if(class_exists($classPath) && is_a($classPath, Controller::class, true))
 				$controller = $classPath::getInstance();
 
 			do {
